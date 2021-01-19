@@ -159,8 +159,6 @@ namespace FileConverter.Controllers
 		[HttpGet]
 		public IActionResult Fetch()
 		{
-			//return View(new List<ExcelSheet>());
-
 			var excelSheet = new ExcelSheet();
 			return View(new DocumentFileViewModel
 			{
@@ -170,10 +168,13 @@ namespace FileConverter.Controllers
 
 		[HttpPost]
 		public IActionResult Fetch(IFormCollection form)
-		{
-			List<string> columns = new List<string>();
+		{	
+            var fileName = "./wwwroot/ExcelTest.xlsx";
 
-			var fileName = "./wwwroot/ExcelTest.xlsx";
+            List<List<string>> table = new List<List<string>>();
+            var numberOfColumns = 0;
+            var numberOfRows = 0;
+                       
 			// For .net core, the next line requires the NuGet package, 
 			// System.Text.Encoding.CodePages
 			System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
@@ -181,33 +182,35 @@ namespace FileConverter.Controllers
 			{
 				using (var reader = ExcelReaderFactory.CreateReader(stream))
 				{
-					var columnsCount = reader.FieldCount;
-					var rowsCount = reader.RowCount;
+                    numberOfColumns = reader.FieldCount;
+                    numberOfRows = reader.RowCount;
 
-					while (reader.Read()) //Each row of the file
+                    while (reader.Read()) //Each row of the file
 					{
-						for (int i = 0; i < columnsCount; i++)
-						{
-							for (int j = 0; j < rowsCount; j++)
-							{
-								var column = reader.GetValue(i).ToString();
-								columns.Add(column);								
-							}
+                        List<string> row = new List<string>();
 
-						}
-					}
+                        for (int i = 0; i < numberOfColumns; i++)
+                        {
+                            var cell = reader.GetValue(i).ToString();
+                            row.Add(cell);
+                        }                   
+
+                        table.Add(row);                        
+                    }
 				}
 			}
 
 			var excelSheet = new ExcelSheet
 			{
-				Column = columns,
-			};
+                Table = table,
+                NumberOfColumns = numberOfColumns,
+                NumberOfRows = numberOfRows
+            };
 
 			return View(new DocumentFileViewModel
 			{
 				ExcelSheet = excelSheet,
-			});
+            });
 		}
 	}
 }

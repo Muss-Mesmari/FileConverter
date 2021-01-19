@@ -1,5 +1,4 @@
-﻿@*@model IEnumerable<ExcelSheet>*@
-@model FileConverter.ViewModels.DocumentFileViewModel
+﻿@model FileConverter.ViewModels.DocumentFileViewModel
 
 @{
     ViewData["Title"] = "Fetch";
@@ -13,20 +12,19 @@
     {
         <input type="submit" value="Get data" />
     }
-    @if (Model.ExcelSheet.Column != null)
+    @if (Model.ExcelSheet.Table != null)
     {
         <hr />
         <table cellpadding="0" cellspacing="0" border="1">
-
-            @foreach (var item in Model.ExcelSheet.Column)
-            {
-                <tr>
-                    <th>Row</th>
-                </tr>
-                <tr>
-                    <td>@item</td>
-                </tr>
-            }
+            <tr>
+                @foreach (var table in Model.ExcelSheet.Table)
+                {
+                    foreach (var item in table) // 99
+                    {
+                        <td>@item</td>
+                    }
+                }
+            </tr>
         </table>
     }
 </div>

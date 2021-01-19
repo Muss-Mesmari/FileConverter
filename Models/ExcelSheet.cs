@@ -7,7 +7,8 @@ namespace FileConverter.Models
 {
 	public class ExcelSheet
 	{
-		public List<string> Column { get; set; }
-		public List<string> Row { get; set; }
+		public List<List<string>> Table { get; set; }
+		public int NumberOfRows { get; set; }
+		public int NumberOfColumns { get; set; }
 	}
 }
