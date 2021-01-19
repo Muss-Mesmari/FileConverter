@@ -9,6 +9,9 @@ using FileConverter.Data;
 using FileConverter.Models;
 using FileConverter.Services;
 using FileConverter.ViewModels;
+using ExcelDataReader;
+using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace FileConverter.Controllers
 {
@@ -152,5 +155,59 @@ namespace FileConverter.Controllers
 			await _databaseServices.DeleteDocumentFile(id);
 			return RedirectToAction(nameof(Index));
         }
-    }
+
+		[HttpGet]
+		public IActionResult Fetch()
+		{
+			//return View(new List<ExcelSheet>());
+
+			var excelSheet = new ExcelSheet();
+			return View(new DocumentFileViewModel
+			{
+				ExcelSheet = excelSheet,
+			});
+		}
+
+		[HttpPost]
+		public IActionResult Fetch(IFormCollection form)
+		{
+			List<string> columns = new List<string>();
+
+			var fileName = "./wwwroot/ExcelTest.xlsx";
+			// For .net core, the next line requires the NuGet package, 
+			// System.Text.Encoding.CodePages
+			System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+			using (var stream = System.IO.File.Open(fileName, FileMode.Open, FileAccess.Read))
+			{
+				using (var reader = ExcelReaderFactory.CreateReader(stream))
+				{
+					var columnsCount = reader.FieldCount;
+					var rowsCount = reader.RowCount;
+
+					while (reader.Read()) //Each row of the file
+					{
+						for (int i = 0; i < columnsCount; i++)
+						{
+							for (int j = 0; j < rowsCount; j++)
+							{
+								var column = reader.GetValue(i).ToString();
+								columns.Add(column);								
+							}
+
+						}
+					}
+				}
+			}
+
+			var excelSheet = new ExcelSheet
+			{
+				Column = columns,
+			};
+
+			return View(new DocumentFileViewModel
+			{
+				ExcelSheet = excelSheet,
+			});
+		}
+	}
 }
