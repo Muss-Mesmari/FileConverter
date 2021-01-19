@@ -31,6 +31,7 @@ namespace FileConverter
 		options.UseSqlServer(Configuration.GetConnectionString("DocumentFileDbContext")));
 
 			services.AddScoped<IDatabaseServices, DatabaseServices>();
+			services.AddScoped<IXlsxServices, XlsxServices>();
 			services.AddControllersWithViews();
 		}
 

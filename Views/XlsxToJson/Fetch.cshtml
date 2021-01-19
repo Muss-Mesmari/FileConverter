@@ -4,27 +4,57 @@
     ViewData["Title"] = "Fetch";
 }
 
-<h1>Fetch</h1>
-
-
 <div>
-    @using (Html.BeginForm("Fetch", "XlsxToJson", FormMethod.Post))
-    {
-        <input type="submit" value="Get data" />
-    }
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Fetch data from an excel file:</h5>
+
+            <div class="d-flex flex-row">
+                <div class="font-weight-bold pr-2">Name of the sheet: </div>
+                <div class="card-text">@Model.ExcelSheet.SheetName</div>
+            </div>
+            <div class="d-flex flex-row">
+                <div class="font-weight-bold pr-2">Number of columns: </div>
+                <div class="card-text">@Model.ExcelSheet.NumberOfColumns</div>
+            </div>
+            <div class="d-flex flex-row">
+                <div class="font-weight-bold pr-2">Number of rows: </div>
+                <div class="card-text">@Model.ExcelSheet.NumberOfRows</div>
+            </div>
+
+            @using (Html.BeginForm("Fetch", "XlsxToJson", FormMethod.Post))
+            {
+                <input type="submit" value="Get data" class="btn btn-primary mt-3"/>
+            }
+        </div>
+    </div>
+
     @if (Model.ExcelSheet.Table != null)
     {
-        <hr />
-        <table cellpadding="0" cellspacing="0" border="1">
-            <tr>
+        <table class="table table-bordered table-striped table-hover">
+            @{
+                <tr>
+                    <th scope="col">#</th>
+                    @foreach (var header in Model.ExcelSheet.Headers)
+                    {
+                        <th scope="col">@header</th>
+                    }
+                </tr>
+
+                var lineCount = 1;
                 @foreach (var table in Model.ExcelSheet.Table)
                 {
-                    foreach (var item in table) // 99
-                    {
-                        <td>@item</td>
-                    }
+                    <tr>
+                        <th scope="row">@lineCount</th>
+                        @foreach (var cell in table) // 99
+                        {
+                            <td>@cell</td>
+                        }
+                    </tr>
+                    lineCount += 1;
                 }
-            </tr>
+            }
         </table>
     }
 </div>

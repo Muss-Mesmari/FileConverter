@@ -1,15 +1,17 @@
 ﻿using ExcelDataReader;
 using FileConverter.Data;
+using FileConverter.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace FileConverter.Services
 {
-	public class XlsxServices
+	public class XlsxServices : IXlsxServices
 	{
 		private readonly DocumentFileDbContext _documentFileDbContext;
 
@@ -18,39 +20,62 @@ namespace FileConverter.Services
 			_documentFileDbContext = documentFileDbContext;
 		}
 
-
-		private List<string> GetDataFromCSVFile(Stream stream)
+		public ExcelSheet GetDataFromXlsxFile(string fileLink)
 		{
-			var empList = new List<string>();
-			try
-			{
-				using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
-				{
-					var dataSet = reader.AsDataSet(new ExcelDataSetConfiguration
-					{
-						ConfigureDataTable = _ => new ExcelDataTableConfiguration
-						{
-							UseHeaderRow = true // To set First Row As Column Names    
-						}
-					});
+			List<List<string>> table = new List<List<string>>();
+			List<string> headers = new List<string>();
+			var numberOfColumns = 0;
+			var numberOfRows = 0;
+			var sheetName = string.Empty;
+			var FileName = string.Empty;
 
-					if (dataSet.Tables.Count > 0)
+			// For .net core, the next line requires the NuGet package, 
+			// System.Text.Encoding.CodePages
+			System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+			using (var stream = System.IO.File.Open(fileLink, FileMode.Open, FileAccess.Read))
+			{
+				using (var reader = ExcelReaderFactory.CreateReader(stream))
+				{
+					numberOfColumns = reader.FieldCount;
+					numberOfRows = reader.RowCount;
+					sheetName = reader.Name;				
+
+					int rowsCount = 0;
+					while (reader.Read()) //Each row of the file
 					{
-						var dataTable = dataSet.Tables[0];
-						foreach (DataRow objDataRow in dataTable.Rows)
-						{
-							if (objDataRow.ItemArray.All(x => string.IsNullOrEmpty(x?.ToString()))) continue;
-							var name = objDataRow["Name"].ToString();
-							empList.Add(name);
+						List<string> row = new List<string>();
+						for (int i = 0; i < numberOfColumns; i++)
+						{							
+							var cell = reader.GetValue(i).ToString();
+							if (rowsCount == 0)
+							{
+								headers.Add(cell);
+							}
+							else
+							{
+								row.Add(cell);
+							}							
 						}
+						if (rowsCount != 0)
+						{
+							table.Add(row);
+						}
+						
+						rowsCount += 1;
 					}
 				}
 			}
-			catch (Exception)
+
+			var excelSheet = new ExcelSheet
 			{
-				throw;
-			}
-			return empList;
+				Table = table,
+				NumberOfColumns = numberOfColumns,
+				NumberOfRows = numberOfRows,
+				Headers = headers,
+				SheetName = sheetName
+			};
+
+			return excelSheet;
 		}
 	}
 }

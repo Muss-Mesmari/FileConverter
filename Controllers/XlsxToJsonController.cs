@@ -19,11 +19,16 @@ namespace FileConverter.Controllers
     {
         private readonly DocumentFileDbContext _context;
 		private readonly IDatabaseServices _databaseServices;
+		private readonly IXlsxServices _xlsxServices;
 
-		public XlsxToJsonController(DocumentFileDbContext context, IDatabaseServices databaseServices)
+		public XlsxToJsonController
+			(DocumentFileDbContext context, 
+			IDatabaseServices databaseServices,
+			IXlsxServices xlsxServices)
         {
             _context = context;
 			_databaseServices = databaseServices;
+			_xlsxServices = xlsxServices;
 		}
 
         // GET: XlsxToJson
@@ -171,41 +176,7 @@ namespace FileConverter.Controllers
 		{	
             var fileName = "./wwwroot/ExcelTest.xlsx";
 
-            List<List<string>> table = new List<List<string>>();
-            var numberOfColumns = 0;
-            var numberOfRows = 0;
-                       
-			// For .net core, the next line requires the NuGet package, 
-			// System.Text.Encoding.CodePages
-			System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-			using (var stream = System.IO.File.Open(fileName, FileMode.Open, FileAccess.Read))
-			{
-				using (var reader = ExcelReaderFactory.CreateReader(stream))
-				{
-                    numberOfColumns = reader.FieldCount;
-                    numberOfRows = reader.RowCount;
-
-                    while (reader.Read()) //Each row of the file
-					{
-                        List<string> row = new List<string>();
-
-                        for (int i = 0; i < numberOfColumns; i++)
-                        {
-                            var cell = reader.GetValue(i).ToString();
-                            row.Add(cell);
-                        }                   
-
-                        table.Add(row);                        
-                    }
-				}
-			}
-
-			var excelSheet = new ExcelSheet
-			{
-                Table = table,
-                NumberOfColumns = numberOfColumns,
-                NumberOfRows = numberOfRows
-            };
+			var excelSheet = _xlsxServices.GetDataFromXlsxFile(fileName);
 
 			return View(new DocumentFileViewModel
 			{
