@@ -1,0 +1,49 @@
+﻿@model FileConverter.ViewModels.DocumentFileViewModel
+
+@{
+    ViewData["Title"] = "XlsxToCSVC";
+}
+<div>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Fetch data from an excel file:</h5>
+
+            <div class="d-flex flex-row">
+                    <div class="font-weight-bold pr-2">Number of columns: </div>
+                    <div class="card-text">@Model.CSV.NumberOfRows</div>
+            </div>
+
+            @using (Html.BeginForm("Convert", "XlsxToCSV", FormMethod.Post))
+             {
+                <input type="submit" value="Get data" class="btn btn-primary mt-3" />
+             }
+        </div>
+    </div>
+
+    @if (Model.CSV.NumberOfRows != 0)
+    {
+        <table class="table table-bordered table-striped table-hover">
+            @{
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">
+                        @foreach (var header in Model.CSV.Headers)
+                         {
+                            @header
+                         }
+                    </th>
+                </tr>
+
+                var lineCount = 1;
+                @foreach (var value in Model.CSV.Rows)
+                 {
+                    <tr>
+                        <th scope="row">@lineCount</th>
+                        <td>@value</td>
+                    </tr>
+                    lineCount += 1;
+                 }
+            }
+        </table>
+    }
+</div>

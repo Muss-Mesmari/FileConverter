@@ -20,46 +20,42 @@ namespace FileConverter.Controllers
         private readonly DocumentFileDbContext _context;
 		private readonly IDatabaseServices _databaseServices;
 		private readonly IXlsxServices _xlsxServices;
+		private readonly ICSVServices _CSVServices;
 
 		public XlsxToCSVController
 			(DocumentFileDbContext context, 
 			IDatabaseServices databaseServices,
-			IXlsxServices xlsxServices)
+			IXlsxServices xlsxServices,
+			ICSVServices csvServices)
         {
             _context = context;
 			_databaseServices = databaseServices;
 			_xlsxServices = xlsxServices;
+			_CSVServices = csvServices;
 		}
 
-        // GET: XlsxToJson
-        public async Task<IActionResult> Index()
-        {
-			return View(new DocumentFileViewModel
-			{
-			});
-		}
-
-
+		// GET: XlsxToJson
 		[HttpGet]
 		public IActionResult Convert()
-		{
-			var excelSheet = new ExcelSheet();
+        {
+			var csv = new CSV();
 			return View(new DocumentFileViewModel
 			{
-				ExcelSheet = excelSheet,
+				CSV = csv
 			});
 		}
 
+
 		[HttpPost]
-		public IActionResult Fetch(IFormCollection form)
+		public IActionResult Convert(IFormCollection form)
 		{	
             var fileName = "./wwwroot/ExcelTest.xlsx";
 
-			var excelSheet = _xlsxServices.GetDataFromXlsxFile(fileName);
+			var csv = _CSVServices.ConvertXlsxToCSV(fileName);
 
 			return View(new DocumentFileViewModel
 			{
-				ExcelSheet = excelSheet,
+				CSV = csv,
             });
 		}
 

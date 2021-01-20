@@ -7,8 +7,8 @@ namespace FileConverter.Models
 {
 	public class CSV
 	{
-		public List<List<string>> Rows { get; set; }
-		public List<string> Headers { get; set; }
+		public List<string> Rows { get; set; }
+		public string Headers { get; set; }
 		public int NumberOfRows { get; set; }
 	}
 }

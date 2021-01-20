@@ -11,6 +11,7 @@ namespace FileConverter.ViewModels
 		public DocumentFile DocumentFile { get; set; }
 		public IEnumerable<DocumentFile> DocumentFiles { get; set; }
 		public ExcelSheet ExcelSheet { get; set; }
+		public CSV CSV { get; set; }
 
 	}
 }
