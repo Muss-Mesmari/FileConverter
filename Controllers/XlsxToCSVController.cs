@@ -12,6 +12,7 @@ using FileConverter.ViewModels;
 using ExcelDataReader;
 using System.IO;
 using Microsoft.AspNetCore.Http;
+using System.Text;
 
 namespace FileConverter.Controllers
 {
@@ -58,6 +59,20 @@ namespace FileConverter.Controllers
 				CSV = csv,
             });
 		}
+
+
+		public IActionResult DownloadCSV(CSV csv)
+		{
+			var fileName = "./wwwroot/ExcelTest.xlsx";
+			csv = _CSVServices.ConvertXlsxToCSV(fileName);
+			var csvTest = _CSVServices.BuildCsvString(csv);
+
+			var fileContents = Encoding.UTF8.GetBytes(csvTest);
+			var contentType = "text/csv";
+			var fileDownloadName = "CSVexample.csv";
+			return	File(fileContents, contentType, fileDownloadName);
+		}
+
 
 	}
 }

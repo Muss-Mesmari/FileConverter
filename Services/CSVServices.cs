@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using System.Text;
 
 namespace FileConverter.Services
 {
@@ -69,5 +70,17 @@ namespace FileConverter.Services
 
 			return totalRows;
 		}
+
+		public string BuildCsvString(CSV csv)
+		{
+			var builder = new StringBuilder();
+			builder.AppendLine(csv.Headers);
+            foreach (var row in csv.Rows)
+            {
+				builder.AppendLine(row);
+			}
+			return builder.ToString();
+		}
+
 	}
 }

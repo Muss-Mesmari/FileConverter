@@ -9,5 +9,6 @@ namespace FileConverter.Services
 	public interface ICSVServices
 	{
 		CSV ConvertXlsxToCSV(string fileName);
+		string BuildCsvString(CSV csv);
 	}
 }
