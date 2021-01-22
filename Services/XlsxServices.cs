@@ -77,5 +77,18 @@ namespace FileConverter.Services
 
 			return excelSheet;
 		}
+
+		public string UplaodCSV(IList<IFormFile> files)
+		{
+			string filePath = string.Empty;
+
+			string path = string.Empty;
+            foreach (var file in files)
+            {
+				path = Path.GetFileName(file.FileName.Trim());
+				filePath = "~/uplaods/" + path;
+			}
+			return filePath;
+		}
 	}
 }
