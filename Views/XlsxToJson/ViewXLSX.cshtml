@@ -22,7 +22,7 @@
                 <div class="card-text">@Model.ExcelSheet.NumberOfRows</div>
             </div>
 
-            @using (Html.BeginForm("Fetch", "XlsxToJson", FormMethod.Post))
+            @using (Html.BeginForm("ViewXLSX", "XlsxToJson", FormMethod.Post))
             {
                 <input type="submit" value="Get data" class="btn btn-primary mt-3" />
             }

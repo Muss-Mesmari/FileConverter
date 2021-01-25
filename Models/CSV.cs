@@ -10,5 +10,6 @@ namespace FileConverter.Models
 		public List<string> Rows { get; set; }
 		public string Headers { get; set; }
 		public int NumberOfRows { get; set; }
+		public int NumberOfHeaders { get; set; }
 	}
 }

@@ -38,8 +38,9 @@ namespace FileConverter.Services
 			{
 				Headers = ConvertXlsxHeadersToCSV(excelSheetHeaders),
 				Rows = ConvertXlsxTableToCSV(excelSheetTable),
-				NumberOfRows = CountCsvRows(excelSheet)
-		};
+				NumberOfRows = CountCsvRows(excelSheet),
+				NumberOfHeaders = CountCsvHeaders(excelSheet)
+			};
 			return csv;
 		}
 
@@ -69,6 +70,12 @@ namespace FileConverter.Services
 			var totalRows = totalTableRows + totalHeadersRows;
 
 			return totalRows;
+		}
+
+		private int CountCsvHeaders(ExcelSheet excelSheet)
+		{
+			var totalHeaders = excelSheet.Headers.Count();
+			return totalHeaders;
 		}
 
 		public string BuildCsvString(CSV csv)

@@ -13,66 +13,70 @@ using ExcelDataReader;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
 
 namespace FileConverter.Controllers
 {
     public class XlsxToCSVController : Controller
     {
         private readonly DocumentFileDbContext _context;
-		private readonly IDatabaseServices _databaseServices;
-		private readonly IXlsxServices _xlsxServices;
-		private readonly ICSVServices _CSVServices;
+        private readonly IDatabaseServices _databaseServices;
+        private readonly IXlsxServices _xlsxServices;
+        private readonly ICSVServices _CSVServices;
+        private readonly IFileServices _fileServices;
 
-		public XlsxToCSVController
-			(DocumentFileDbContext context, 
-			IDatabaseServices databaseServices,
-			IXlsxServices xlsxServices,
-			ICSVServices csvServices)
+        public XlsxToCSVController
+            (DocumentFileDbContext context,
+            IDatabaseServices databaseServices,
+            IXlsxServices xlsxServices,
+            ICSVServices csvServices,
+            IFileServices fileServices)
         {
             _context = context;
-			_databaseServices = databaseServices;
-			_xlsxServices = xlsxServices;
-			_CSVServices = csvServices;
-		}
-
-		// GET: XlsxToJson
-		[HttpGet]
-		public IActionResult Convert()
+            _databaseServices = databaseServices;
+            _xlsxServices = xlsxServices;
+            _CSVServices = csvServices;
+            _fileServices = fileServices;
+        }
+        public IActionResult Index(string path, string fileName)
         {
-			var csv = new CSV();
-			return View(new DocumentFileViewModel
-			{
-				CSV = csv
-			});
-		}
+            var csv = new CSV();
+            var filePath = string.Empty;
 
+            if (path != null)
+            {
+                filePath = path;
+                csv = _CSVServices.ConvertXlsxToCSV(filePath);
+            }
 
-		[HttpPost]
-		public IActionResult Convert(IFormCollection form)
-		{	
-            var fileName = "./wwwroot/ExcelTest.xlsx";
-
-			var csv = _CSVServices.ConvertXlsxToCSV(fileName);
-
-			return View(new DocumentFileViewModel
-			{
-				CSV = csv,
+            return View(new DocumentFileViewModel
+            {
+                CSV = csv,
+                FilePath = filePath,
+                FileName = fileName
             });
-		}
+        }
 
+        [HttpPost("FileUpload")]
+        public async Task<IActionResult> Upload(List<IFormFile> files)
+        {
+            var _uploadedFile = await _fileServices.UploadAsync(files);
+            var _path = _uploadedFile.Path;
+            var _fileName = _uploadedFile.Name;
 
-		public IActionResult DownloadCSV(CSV csv)
-		{
-			var fileName = "./wwwroot/ExcelTest.xlsx";
-			csv = _CSVServices.ConvertXlsxToCSV(fileName);
-			var csvTest = _CSVServices.BuildCsvString(csv);
+            // process uploaded files
+            // Don't rely on or trust the FileName property without validation.
+           return RedirectToAction(nameof(Index), new { path = _path, fileName = _fileName});
+        }
 
-			var fileContents = Encoding.UTF8.GetBytes(csvTest);
-			var contentType = "text/csv";
-			var fileDownloadName = "CSVexample.csv";
-			return	File(fileContents, contentType, fileDownloadName);
-		}
+        public IActionResult Download(string filePath, string fileName)
+        {           
+            var csv = _CSVServices.ConvertXlsxToCSV(filePath);
+            var csvDownloadFormat = _CSVServices.BuildCsvString(csv);
 
+            var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
+            return File(fileContents, "text/csv", $"{fileName}.csv");
+        }
 
-	}
+    }
 }

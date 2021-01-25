@@ -10,6 +10,6 @@ namespace FileConverter.Services
 	public interface IXlsxServices
 	{
 		ExcelSheet GetDataFromXlsxFile(string fileName);
-		string UplaodCSV(IList<IFormFile> files);
+
 	}
 }

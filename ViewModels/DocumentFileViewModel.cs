@@ -12,6 +12,7 @@ namespace FileConverter.ViewModels
 		public IEnumerable<DocumentFile> DocumentFiles { get; set; }
 		public ExcelSheet ExcelSheet { get; set; }
 		public CSV CSV { get; set; }
-
+		public string FilePath { get; set; }
+		public string FileName { get; set; }
 	}
 }

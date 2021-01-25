@@ -1,0 +1,87 @@
+﻿@model FileConverter.ViewModels.DocumentFileViewModel
+
+@{
+    ViewData["Title"] = "XlsxToCSVC";
+}
+<div>
+
+
+    <form method="post" enctype="multipart/form-data" asp-controller="XlsxToCSV" asp-action="Upload">
+
+        <h1><strong>Xlsx to CSV</strong></h1>
+
+
+        <div class="form-group file-area">
+            <label for="files">CSV <span>Please upload files in "xlsx" format</span></label>
+            <input type="file" name="files" id="files" required="required" multiple="multiple" />
+            <div class="file-dummy">
+                <div class="success">Great, your files are selected. Keep on.</div>
+                <div class="default">Please select some files</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <button type="submit">Upload file</button>
+        </div>
+
+    </form>
+
+
+    @if (Model.CSV.NumberOfRows != 0)
+    {
+        <div class="card bg-light text-dark mb-3">
+            <div class="card-body">
+                <div class="d-flex flex-row">
+                    <div class="font-weight-bold h5 pr-2">About </div>
+                    <div class="font-weight-bold h5">@Model.FileName</div>
+                </div>
+
+                <div class="d-flex flex-row">
+                    <div class="font-weight-bold pr-2">Number of rows: </div>
+                    <div class="card-text">@Model.CSV.NumberOfRows</div>
+                </div>
+                <div class="d-flex flex-row">
+                    <div class="font-weight-bold pr-2">Number of headers: </div>
+                    <div class="card-text">@Model.CSV.NumberOfHeaders.</div>
+                </div>
+                <div class="d-flex flex-row mt-3">
+                    <a asp-controller="XlsxToCSV" asp-action="Download" asp-route-filePath="@Model.FilePath" asp-route-fileName="@Model.FileName" role="button" class="btn btn-success">
+                        <i class="text-white fa fa-download">´Download</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+
+        <table class="table table-bordered table-striped text-white">
+            @{
+                <thead class="bg-light text-dark">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">
+                            @foreach (var header in Model.CSV.Headers)
+                            {
+                                @header
+                            }
+                        </th>
+                    </tr>
+                </thead>
+
+                var lineCount = 1;
+                <tbody>
+                    @foreach (var value in Model.CSV.Rows)
+                    {
+
+                        <tr class="tr">
+                            <th scope="row" class="text-warning">@lineCount</th>
+                            <td>@value</td>
+
+                        </tr>
+                        lineCount += 1;
+                    }
+                </tbody>
+            }
+        </table>
+    }
+</div>
