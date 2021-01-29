@@ -5,27 +5,29 @@
 }
 <div>
 
+    <h1><strong>Xlsx to CSV</strong></h1>
 
-    <form method="post" enctype="multipart/form-data" asp-controller="XlsxToCSV" asp-action="Upload">
-
-        <h1><strong>Xlsx to CSV</strong></h1>
-
-
-        <div class="form-group file-area">
-            <label for="files">CSV <span>Please upload files in "xlsx" format</span></label>
-            <input type="file" name="files" id="files" required="required" multiple="multiple" />
-            <div class="file-dummy">
-                <div class="success">Great, your files are selected. Keep on.</div>
-                <div class="default">Please select some files</div>
-            </div>
+    <div class="card" id="XlsxToCSVCard">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" asp-controller="XlsxToCSV" asp-action="Upload">
+                <div class="form-group file-area">
+                    <label for="files">CSV <span>Please upload files in "xlsx" format</span></label>
+                    <input type="file" name="files" id="files" required="required" />
+                    <div class="file-dummy">
+                        <div class="success">Great, your files are selected. Keep on.</div>
+                        <div class="default">Please select some files</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Upload file" class="btn btn-success text-white" />
+                </div>
+            </form>
         </div>
 
-        <div class="form-group">
-            <button type="submit">Upload file</button>
-        </div>
+    </div>
 
-    </form>
-
+    <hr class="my-3 bg-white"/>
+    <h4><strong>Preview:</strong></h4>
 
     @if (Model.CSV.NumberOfRows != 0)
     {
@@ -35,7 +37,7 @@
                     <div class="font-weight-bold h5 pr-2">About </div>
                     <div class="font-weight-bold h5">@Model.FileName</div>
                 </div>
-
+                <hr>
                 <div class="d-flex flex-row">
                     <div class="font-weight-bold pr-2">Number of rows: </div>
                     <div class="card-text">@Model.CSV.NumberOfRows</div>
@@ -53,10 +55,9 @@
         </div>
 
 
-
-        <table class="table table-bordered table-striped text-white">
+        <table class="table table-bordered table-hover table-striped bg-light text-dark">
             @{
-                <thead class="bg-light text-dark">
+                <thead >
                     <tr>
                         <th scope="col">#</th>
                         <th scope="col">
@@ -73,8 +74,8 @@
                     @foreach (var value in Model.CSV.Rows)
                     {
 
-                        <tr class="tr">
-                            <th scope="row" class="text-warning">@lineCount</th>
+                        <tr>
+                            <th scope="row">@lineCount</th>
                             <td>@value</td>
 
                         </tr>

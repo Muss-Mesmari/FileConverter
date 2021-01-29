@@ -26,13 +26,6 @@ namespace FileConverter.Services
             _xlsxServices = xlsxServices;
         }
 
-        //        String folderPathThatYouCanWriteTo = "Your Writable Path here";
-        //        String fullFilePath = null;
-        //do
-        //{
-        //    fullFilePath = String.Format(@"{0}\{1}", folderPathThatYouCanWriteTo, Path.GetRandomFileName());
-        //} while (File.Exists(fullFilePath));
-
 
         public async Task<Files> UploadAsync(List<IFormFile> files)
         {
@@ -67,7 +60,6 @@ namespace FileConverter.Services
 
             return uploadedFile;
         }
-
         public Byte[] GetFileContents(string file)
         {
             var fileContents = Encoding.UTF8.GetBytes(file);

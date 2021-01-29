@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace FileConverter.Services
 {
-	public interface ICSVServices
-	{
-		CSV ConvertXlsxToCSV(string fileName);
-		string BuildCsvString(CSV csv);
-	}
+    public interface ICSVServices
+    {
+        Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName);
+        CSV ConvertXlsxToCSV(string fileName);
+        string BuildCsvString(CSV csv);
+        string BuildCsvStringFromSQLServer(CSV csv);
+    }
 }

@@ -16,14 +16,16 @@ namespace FileConverter.Services
 	{
 		private readonly DocumentFileDbContext _documentFileDbContext;
 		private readonly IXlsxServices _xlsxServices;
-
+		private readonly IDatabaseServices _databaseServices;
 		public CSVServices(
 			DocumentFileDbContext documentFileDbContext, 
-			IXlsxServices xlsxServices
+			IXlsxServices xlsxServices,
+			IDatabaseServices databaseServices
 			)
 		{
 			_documentFileDbContext = documentFileDbContext;
 			_xlsxServices = xlsxServices;
+			_databaseServices = databaseServices;
 		}
 
 		public CSV ConvertXlsxToCSV(string fileLink)
@@ -82,12 +84,80 @@ namespace FileConverter.Services
 		{
 			var builder = new StringBuilder();
 			builder.AppendLine(csv.Headers);
-            foreach (var row in csv.Rows)
+
+            if (csv.Rows != null)
             {
-				builder.AppendLine(row);
+				foreach (var row in csv.Rows)
+				{
+					builder.AppendLine(row);
+				}
 			}
+            
 			return builder.ToString();
 		}
 
+		public string BuildCsvStringFromSQLServer(CSV csv)
+		{
+			var builder = new StringBuilder();
+
+			if (csv.HeadersFromSqlServer != null)
+			{
+				foreach (var header in csv.HeadersFromSqlServer)
+				{
+					builder.AppendLine(header);
+				}
+			}
+
+			return builder.ToString();
+		}
+
+
+		public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName)
+		{
+			var sqlServerHeadersAndTables = await _databaseServices.GetAllAttributesAsync(conString, tableName);
+
+			var sqlServerHeaders = new List<string>();
+
+			if (!string.IsNullOrEmpty(tableName))
+            {
+				sqlServerHeaders =MatchTable(tableName, sqlServerHeadersAndTables);
+			}
+            else
+            {
+				sqlServerHeaders = ConvertSqlServerHeadersToCSV(sqlServerHeadersAndTables);
+			}
+			
+			var csv = new CSV
+			{
+				HeadersFromSqlServer = sqlServerHeaders,
+			};
+			return csv;
+		}
+
+		private List<string> ConvertSqlServerHeadersToCSV(List<KeyValuePair<string, List<string>>> sqlServerHeaders)
+		{
+			List<string> csvHeaders = new List<string>();
+            for (int i = 0; i < sqlServerHeaders.Count(); i++)
+            {				
+				var header = String.Join(",", sqlServerHeaders[i].Value);
+				csvHeaders.Add(header);
+			}		
+			return csvHeaders;
+		}
+
+		private List<string> MatchTable(string tableName, List<KeyValuePair<string, List<string>>> sqlServerHeaders)
+		{
+			List<string> csvHeaders = new List<string>();
+
+			for (int i = 0; i < sqlServerHeaders.Count(); i++)
+			{
+                if (sqlServerHeaders[i].Key == tableName)
+                {
+					var header = String.Join(",", sqlServerHeaders[i].Value);
+					csvHeaders.Add(header);
+				}
+			}
+			return csvHeaders;
+		}
 	}
 }

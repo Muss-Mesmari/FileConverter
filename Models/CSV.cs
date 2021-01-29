@@ -11,5 +11,6 @@ namespace FileConverter.Models
 		public string Headers { get; set; }
 		public int NumberOfRows { get; set; }
 		public int NumberOfHeaders { get; set; }
+		public List<string> HeadersFromSqlServer { get; set; }
 	}
 }

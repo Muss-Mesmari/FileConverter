@@ -24,7 +24,7 @@ namespace FileConverter.Controllers
         private readonly IXlsxServices _xlsxServices;
         private readonly ICSVServices _CSVServices;
         private readonly IFileServices _fileServices;
-
+     
         public XlsxToCSVController
             (DocumentFileDbContext context,
             IDatabaseServices databaseServices,
@@ -38,7 +38,7 @@ namespace FileConverter.Controllers
             _CSVServices = csvServices;
             _fileServices = fileServices;
         }
-        public IActionResult Index(string path, string fileName)
+        public async Task<IActionResult> Index(string path, string fileName)
         {
             var csv = new CSV();
             var filePath = string.Empty;

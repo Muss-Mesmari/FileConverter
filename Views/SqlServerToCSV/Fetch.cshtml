@@ -1,0 +1,108 @@
+﻿@model FileConverter.ViewModels.DocumentFileViewModel
+
+@{
+    ViewData["Title"] = "SQL Server to CSV";
+}
+
+<h1><strong>SQL Server to CSV</strong></h1>
+
+<div class="card-deck">
+    <div class="card" id="SQLServerToCSVSubCard">
+        <div class="card-body">
+            <form method="post" asp-controller="SqlServerToCSV" asp-action="Fetch">
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.Server">Server</label>
+                    <input type="text" class="form-control" asp-for="SQLServerConfig.Server">
+                </div>
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.Database">User Id</label>
+                    <input type="text" class="form-control" asp-for="SQLServerConfig.Database">
+                </div>
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.UserId">User Id</label>
+                    <input type="text" class="form-control" asp-for="SQLServerConfig.UserId">
+                </div>
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.Password">User Id</label>
+                    <input type="password" class="form-control" asp-for="SQLServerConfig.Password">
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Connect" class="btn btn-success text-white" />
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<hr class="my-3 bg-white" />
+
+<h4><strong>Preview:</strong></h4>
+
+@if (@Model.Database.NumberOfTables != 0)
+{
+    <div class="card bg-light text-dark mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-row">
+                <div class="font-weight-bold h5 pr-2">About </div>
+                <div class="font-weight-bold h5">@Model.FileName</div>
+            </div>
+            <hr>
+            <div class="d-flex flex-row">
+                <div class="font-weight-bold pr-2">Number of tables: </div>
+                <div class="card-text">@Model.Database.NumberOfTables</div>
+            </div>
+            <form method="post" asp-controller="SqlServerToCSV" asp-action="Download" asp-route-conString="@Model.SQLServerConfig.ConString">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    <label asp-for="FileName" class="control-label"></label>
+                    <select asp-for="FileName" class="form-control" asp-items="@(new SelectList(Model.Database.Tables))">
+                        <option>Select a table</option>
+                        <option value="">Download all</option>
+                    </select>
+                    <span asp-validation-for="FileName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Download" class="btn btn-success text-white" />
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="accordion" id="accordionExample">
+        <div class="card">
+            @for (int i = 0; i < @Model.AttributesByTable.Count(); i++)
+            {
+                <div class="card-header" id="heading-@i">
+                    <h2 class="mb-0">
+                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse-@i" aria-expanded="true" aria-controls="collapse-@i">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    @Model.AttributesByTable[i].Key
+                                    <span class="badge badge-warning ml-3">@Model.AttributesByTable[i].Value.Count() attributes</span>
+                                </div>
+                                <div><i class="fas fa-chevron-down text-dark"></i></div>
+                            </div>
+                        </button>
+                    </h2>
+                </div>
+                <div id="collapse-@i" class="collapse" aria-labelledby="heading-@i" data-parent="#accordionExample">
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            @for (int j = 0; j < @Model.AttributesByTable[i].Value.Count(); j++)
+                            {
+                                <li class="list-group-item list-group-item-action text-dark">@Model.AttributesByTable[i].Value[j]</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+
+
+

@@ -14,5 +14,6 @@ namespace FileConverter.Data
 		{
 		}
 		public DbSet<DocumentFile> DocumentFile { get; set; }
+
 	}
 }

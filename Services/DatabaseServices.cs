@@ -1,83 +1,96 @@
 ﻿using FileConverter.Data;
 using FileConverter.Models;
 using FileConverter.ViewModels;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace FileConverter.Services
 {
-	public class DatabaseServices : IDatabaseServices
-	{
-		private readonly DocumentFileDbContext _documentFileDbContext;
+    public class DatabaseServices : IDatabaseServices
+    {
+        private readonly DocumentFileDbContext _documentFileDbContext;
 
-		public DatabaseServices(DocumentFileDbContext documentFileDbContext)
-		{
-			_documentFileDbContext = documentFileDbContext;
-		}
+        public DatabaseServices(DocumentFileDbContext documentFileDbContext)
+        {
+            _documentFileDbContext = documentFileDbContext;
+        }
 
-		public async Task<IEnumerable<DocumentFile>> GetAllDocumentFilesAsync()
-		{
-			return await _documentFileDbContext.DocumentFile.ToListAsync();
-		}
-		public async Task<DocumentFile> CreateDocumentFileAsync(DocumentFileViewModel newDocumentFile)
-		{
-			var _newDocumentFile = new DocumentFile()
-			{
-				Name = newDocumentFile.DocumentFile.Name,
-				Format = newDocumentFile.DocumentFile.Format
-			};
+        public string GetConfigString(DocumentFileViewModel documentFileViewModel)
+        {
+            var server = documentFileViewModel.SQLServerConfig.Server;
+            var database = documentFileViewModel.SQLServerConfig.Database;
+            var userId = documentFileViewModel.SQLServerConfig.UserId;
+            var password = documentFileViewModel.SQLServerConfig.Password;
 
-			_documentFileDbContext.DocumentFile.Add(_newDocumentFile);
-			await _documentFileDbContext.SaveChangesAsync();
+            var conString = $"Server={server};Database={database};User Id={userId};password={password};Trusted_Connection=True;MultipleActiveResultSets=true";
+            return conString;
+        }
+        public async Task<List<KeyValuePair<string, List<string>>>> GetAllAttributesAsync(string conString, string tableName)
+        {
+            var allAttributesByTable = new List<KeyValuePair<string, List<string>>>();
 
-			return _newDocumentFile;
-		}
-		public async Task<DocumentFile> UpdateDocumentFileAsync(DocumentFileViewModel documentFile)
-		{
-			if (documentFile != null)
-			{
-				documentFile.DocumentFile.Name = documentFile.DocumentFile.Name;
-				documentFile.DocumentFile.Format = documentFile.DocumentFile.Format;
-			}
+            var tables = new List<string>();
 
-			var updatedDocumentFile = documentFile.DocumentFile;
-			var entity = _documentFileDbContext.Entry(updatedDocumentFile);
-			entity.State = EntityState.Modified;
-			await _documentFileDbContext.SaveChangesAsync();
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                var attributes = await GetAttributesByTableAsync(conString, tableName);
+                allAttributesByTable.Insert(0, new KeyValuePair<string, List<string>>(tableName, attributes));
+            }
+            else
+            {
+                tables = await GetAllDatabaseTablesAsync(conString);
 
-			return updatedDocumentFile;
-		}
-		public bool DocumentFileExists(int id)
-		{
-			return _documentFileDbContext.DocumentFile.Any(df => df.Id == id);
-		}
-		public async Task<DocumentFile> GetDocumentFileByIdAsync(int? id)
-		{
-			var documentFileById = await _documentFileDbContext.DocumentFile.FindAsync(id);
-			// var documentFileById = _documentFileDbContext.DocumentFile.FirstOrDefault(e => e.Id == id);
+                for (int i = 0; i < tables.Count(); i++)
+                {
+                    var attributes = await GetAttributesByTableAsync(conString, tables[i]);
+                    allAttributesByTable.Insert(i, new KeyValuePair<string, List<string>>(tables[i], attributes));
+                }
+            }
 
-			var entity = _documentFileDbContext.Entry(documentFileById);
-			entity.State = EntityState.Detached;
+            return allAttributesByTable;
+        }
+        public async Task<List<string>> GetAllDatabaseTablesAsync(string conString)
+        {
+            using (SqlConnection connection = new SqlConnection(conString))
+            {
+                await connection.OpenAsync();
 
-			return documentFileById;
-		}
-		public async Task<bool> DeleteDocumentFile(int id)
-		{
-			var removedDocumentFile = await GetDocumentFileByIdAsync(id);
-			if (removedDocumentFile != null)
-			{
-				_documentFileDbContext.Remove(removedDocumentFile);
-				await _documentFileDbContext.SaveChangesAsync();
+                DataTable schema = await connection.GetSchemaAsync("Tables");
+                List<string> TableNames = new List<string>();
 
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-	}
+                foreach (DataRow row in schema.Rows)
+                {
+                    TableNames.Add(row[2].ToString());
+                }
+                return TableNames;
+            }
+        }
+        private async Task<List<string>> GetAttributesByTableAsync(string conString, string table)
+        {
+            var sql = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'{table}'";
+
+            using (SqlConnection connection = new SqlConnection(conString))
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                await connection.OpenAsync();
+
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                var attributeTypes = new List<string>();
+                var attributeValues = new List<string>();
+
+                while (await reader.ReadAsync())
+                {
+                    var attributeValue = reader.GetSqlString(0).Value;
+                    attributeValues.Add(attributeValue);
+                }
+                return attributeValues;
+            }
+        }
+    }
 }
