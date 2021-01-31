@@ -38,7 +38,7 @@ namespace FileConverter.Controllers
             _CSVServices = csvServices;
             _fileServices = fileServices;
         }
-        public async Task<IActionResult> Index(string path, string fileName)
+        public IActionResult Index(string path, string fileName)
         {
             var csv = new CSV();
             var filePath = string.Empty;

@@ -171,9 +171,9 @@ namespace FileConverter.Services
 		}
 
 
-		public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName)
+		public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, string modelName)
 		{
-			var sqlServerHeadersAndTables = await _databaseServices.GetAllAttributesAsync(conString, tableName);
+			var sqlServerHeadersAndTables = await _databaseServices.GetAllAttributesAsync(conString, tableName, modelName);
 
 			var sqlServerHeaders = new List<string>();
 

@@ -63,9 +63,10 @@ namespace FileConverter.Controllers
                 ConString = conString
             };            
 
-            var _attributesByTable = await _databaseServices.GetAllAttributesAsync(conString, fileName);
+            var _attributesByTable = await _databaseServices.GetAllAttributesAsync(conString, fileName, null);
             var tables = await _databaseServices.GetAllDatabaseTablesAsync(conString);
             var numberOfTables = _attributesByTable.Count();
+			var modelsNames = _databaseServices.GetAllModelsNames(tables);
             var databases = new Database
             {
                 NumberOfTables = numberOfTables,
@@ -76,15 +77,16 @@ namespace FileConverter.Controllers
             {
                 AttributesByTable = _attributesByTable,
                 Database = databases,
-                SQLServerConfig = sQLServerConfig
-            });
+                SQLServerConfig = sQLServerConfig,
+				ModelsNames = modelsNames
+			});
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string fileName, string conString)
+        public async Task<IActionResult> Download(string fileName, string conString, string modelName)
         {
-            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, fileName);
+            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, fileName, modelName);
             var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
             var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
             if (string.IsNullOrEmpty(fileName))
