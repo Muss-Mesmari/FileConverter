@@ -52,13 +52,70 @@ namespace FileConverter.Services
 			return csvHeaders;
 		}
 
-		private List<string> ConvertXlsxTableToCSV(List<List<string>> excelSheetTable)
+        //private List<string> CreateValidCSVRow(List<string> row)
+        //{
+        //	List<string> csvRows = new List<string>();
+
+        //	foreach (var value in row)
+        //	{
+        //              if (value.GetType() == typeof(int))
+        //              {
+        //			if (value.Contains(","))
+        //			{
+        //				var newValue = value.Replace(",", ".");
+        //				csvRows.Add(newValue);
+        //			}
+        //			else
+        //			{
+        //				csvRows.Add(value);
+        //			}
+        //		}
+        //		else
+        //		{
+        //			csvRows.Add(value);
+        //		}
+
+        //	}
+        //	return csvRows;
+        //}
+
+        private List<string> ValidateStrings(List<string> row)
+        {
+            List<string> csvRows = new List<string>();
+
+            foreach (var value in row)
+            {
+                if (value.GetType() == typeof(string))
+                {
+                    if (value.Contains("\""))
+                    {
+                        var newValue = value.Replace("\"", "\"\"");
+                        csvRows.Add(newValue);
+                    }
+                    else
+                    {
+                        csvRows.Add(value);
+                    }
+                }
+                else
+                {
+                    csvRows.Add(value);
+                }
+
+            }
+            return csvRows;
+        }
+
+        private List<string> ConvertXlsxTableToCSV(List<List<string>> excelSheetTable)
 		{
 			List<string> csvRows = new List<string>();
 
 			foreach (var row in excelSheetTable)
 			{
-				var csvRow = String.Join(",", row);
+				var validRow = ValidateStrings(row);
+
+				var doubleQuote = "\"";
+				var csvRow = doubleQuote + string.Join(@""",""", validRow) + doubleQuote;
 				csvRows.Add(csvRow);
 			}
 
@@ -82,6 +139,8 @@ namespace FileConverter.Services
 
 		public string BuildCsvString(CSV csv)
 		{
+			var doubleQuote = "\"";
+
 			var builder = new StringBuilder();
 			builder.AppendLine(csv.Headers);
 
@@ -89,10 +148,10 @@ namespace FileConverter.Services
             {
 				foreach (var row in csv.Rows)
 				{
-					builder.AppendLine(row);
+					builder.AppendLine(doubleQuote + doubleQuote + row);
 				}
 			}
-            
+		
 			return builder.ToString();
 		}
 

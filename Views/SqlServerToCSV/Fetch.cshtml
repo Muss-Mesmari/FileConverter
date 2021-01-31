@@ -4,27 +4,28 @@
     ViewData["Title"] = "SQL Server to CSV";
 }
 
-<h1><strong>SQL Server to CSV</strong></h1>
+
+<h1 class="text-center"><strong>SQL Server to CSV</strong></h1>
 
 <div class="card-deck">
     <div class="card" id="SQLServerToCSVSubCard">
         <div class="card-body">
             <form method="post" asp-controller="SqlServerToCSV" asp-action="Fetch">
                 <div class="form-group">
-                    <label asp-for="SQLServerConfig.Server">Server</label>
-                    <input type="text" class="form-control" asp-for="SQLServerConfig.Server">
+                    <label asp-for="SQLServerConfig.Server"></label>
+                    <input type="text" class="form-control" placeholder="e.g. dwpro3"  asp-for="SQLServerConfig.Server">
                 </div>
                 <div class="form-group">
-                    <label asp-for="SQLServerConfig.Database">User Id</label>
-                    <input type="text" class="form-control" asp-for="SQLServerConfig.Database">
+                    <label asp-for="SQLServerConfig.Database"></label>
+                    <input type="text" class="form-control" placeholder="e.g. cdc"  asp-for="SQLServerConfig.Database">
                 </div>
                 <div class="form-group">
-                    <label asp-for="SQLServerConfig.UserId">User Id</label>
-                    <input type="text" class="form-control" asp-for="SQLServerConfig.UserId">
+                    <label asp-for="SQLServerConfig.UserId"></label>
+                    <input type="text" class="form-control" placeholder="e.g. ALECTA\\K88677"  asp-for="SQLServerConfig.UserId">
                 </div>
                 <div class="form-group">
-                    <label asp-for="SQLServerConfig.Password">User Id</label>
-                    <input type="password" class="form-control" asp-for="SQLServerConfig.Password">
+                    <label asp-for="SQLServerConfig.Password"></label>
+                    <input type="password" class="form-control" placeholder="******"  asp-for="SQLServerConfig.Password">
                 </div>
                 <div class="form-group">
                     <input type="submit" value="Connect" class="btn btn-success text-white" />
