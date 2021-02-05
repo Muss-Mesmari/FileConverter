@@ -8,9 +8,10 @@ namespace FileConverter.Services
 {
 	public interface IDatabaseServices
 	{
-		Task<List<KeyValuePair<string, List<string>>>> GetAllAttributesAsync(string conString, string fileName, string modelName);
+		Task<List<KeyValuePair<string, List<string>>>> GetAllAttributesAsync(string conString, string fileName, string servicesNames);
 		Task<List<string>> GetAllDatabaseTablesAsync(string conString);
 		string GetConfigString(DocumentFileViewModel documentFileViewModel);
-		List<string> GetAllModelsNames(List<string> tables);
+		Task<List<KeyValuePair<string, int>>> GetAllDataTypesNamesAsync(List<string> tables, string conString);
+		Task<List<KeyValuePair<string, int>>> GetDataFromTableAsync(string conString, int objectId);
 	}
 }

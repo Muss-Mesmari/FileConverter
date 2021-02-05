@@ -15,8 +15,9 @@ namespace FileConverter.ViewModels
 		public CSV CSV { get; set; }
 		public Database Database { get; set; }
 		public string FilePath { get; set; }
-		public string FileName { get; set; }
-		public List<string> ModelsNames { get; set; }
+		public string TableName { get; set; }
+		public List<KeyValuePair<string, int>> ServicesNames { get; set; }
+		public int objectId { get; set; }
 		public List<KeyValuePair<string, List<string>>> AttributesByTable { get; set; }
 	}
 }

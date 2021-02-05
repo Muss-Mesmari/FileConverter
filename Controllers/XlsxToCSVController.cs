@@ -53,7 +53,7 @@ namespace FileConverter.Controllers
             {
                 CSV = csv,
                 FilePath = filePath,
-                FileName = fileName
+                TableName = fileName
             });
         }
 

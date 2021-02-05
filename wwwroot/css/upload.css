@@ -1,11 +1,16 @@
 ﻿/* ===================== FILE INPUT ===================== */
 #XlsxToCSVCard {
-    background-color: dimgray;
+    background-color: rgb(80,80,80);
     border: 1px solid rgb(255, 255, 255);
 }
 
 #SQLServerToCSVSubCard {
-    background-color: dimgray;
+    background-color: rgb(80,80,80);
+    border: 1px solid rgb(255, 255, 255);
+}
+
+.task-card {
+    background-color: rgb(80,80,80);
     border: 1px solid rgb(255, 255, 255);
 }
 

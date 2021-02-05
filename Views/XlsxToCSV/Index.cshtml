@@ -35,7 +35,7 @@
         <div class="card-body">
             <div class="d-flex flex-row">
                 <div class="font-weight-bold h5 pr-2">About </div>
-                <div class="font-weight-bold h5">@Model.FileName</div>
+                <div class="font-weight-bold h5">@Model.TableName</div>
             </div>
             <hr>
             <div class="d-flex flex-row">
@@ -47,7 +47,7 @@
                 <div class="card-text">@Model.CSV.NumberOfHeaders.</div>
             </div>
             <div class="d-flex flex-row mt-3">
-                <a asp-controller="XlsxToCSV" asp-action="Download" asp-route-filePath="@Model.FilePath" asp-route-fileName="@Model.FileName" role="button" class="btn btn-success">
+                <a asp-controller="XlsxToCSV" asp-action="Download" asp-route-filePath="@Model.FilePath" asp-route-fileName="@Model.TableName" role="button" class="btn btn-success">
                     <i class="text-white fa fa-download">´Download</i>
                 </a>
             </div>

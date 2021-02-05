@@ -1,4 +1,12 @@
-﻿// Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
-
-// Write your JavaScript code.
+﻿
+// Hover Card effect //
+$(document).ready(function () {
+    $(".task-card").hover(
+        function () {
+            $(this).addClass('bg-dark').css('cursor', 'pointer');
+        }, function () {
+            $(this).removeClass('bg-dark');
+        }
+    );
+});
+/* -------------- */

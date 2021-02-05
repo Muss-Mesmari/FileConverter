@@ -55,7 +55,7 @@ namespace FileConverter.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fetch(DocumentFileViewModel newDocumentFile)
         {
-            var fileName = newDocumentFile.FileName;
+            var fileName = newDocumentFile.TableName;
 
             var conString = _databaseServices.GetConfigString(newDocumentFile);
             var sQLServerConfig = new SQLServerConfig
@@ -66,7 +66,13 @@ namespace FileConverter.Controllers
             var _attributesByTable = await _databaseServices.GetAllAttributesAsync(conString, fileName, null);
             var tables = await _databaseServices.GetAllDatabaseTablesAsync(conString);
             var numberOfTables = _attributesByTable.Count();
-			var modelsNames = _databaseServices.GetAllModelsNames(tables);
+            var servicesNames = await _databaseServices.GetAllDataTypesNamesAsync(tables, conString);
+            //var services = await _databaseServices.GetAllDataTypesNamesAsync(tables, conString);
+            //var servicesNames = new List<string>();
+            //foreach (var service in services)
+            //{
+            //    servicesNames.Add(service.Key);
+            //}
             var databases = new Database
             {
                 NumberOfTables = numberOfTables,
@@ -78,22 +84,22 @@ namespace FileConverter.Controllers
                 AttributesByTable = _attributesByTable,
                 Database = databases,
                 SQLServerConfig = sQLServerConfig,
-				ModelsNames = modelsNames
-			});
+                ServicesNames = servicesNames
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string fileName, string conString, string modelName)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectId)
         {
-            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, fileName, modelName);
+            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);
             var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
             var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
-            if (string.IsNullOrEmpty(fileName))
+            if (string.IsNullOrEmpty(tableName))
             {
-                fileName = DateTime.Now.ToShortDateString() + "- file";
+                tableName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
             }            
-            return File(fileContents, "text/csv", $"{fileName}.csv");
+            return File(fileContents, "text/csv", $"{tableName}.csv");
         }
 
     }

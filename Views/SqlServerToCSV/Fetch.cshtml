@@ -13,15 +13,15 @@
             <form method="post" asp-controller="SqlServerToCSV" asp-action="Fetch">
                 <div class="form-group">
                     <label asp-for="SQLServerConfig.Server"></label>
-                    <input type="text" class="form-control" placeholder="e.g. dwpro3"  asp-for="SQLServerConfig.Server">
+                    <input type="text" class="form-control" placeholder="e.g. dwpro3"  asp-for="SQLServerConfig.Server" value="int5_dev">
                 </div>
                 <div class="form-group">
                     <label asp-for="SQLServerConfig.Database"></label>
-                    <input type="text" class="form-control" placeholder="e.g. cdc"  asp-for="SQLServerConfig.Database">
+                    <input type="text" class="form-control" placeholder="e.g. UDGAHBAS"  asp-for="SQLServerConfig.Database" value="UDGAHBAS">
                 </div>
                 <div class="form-group">
                     <label asp-for="SQLServerConfig.UserId"></label>
-                    <input type="text" class="form-control" placeholder="e.g. ALECTA\\K88677"  asp-for="SQLServerConfig.UserId">
+                    <input type="text" class="form-control" placeholder="e.g. ALECTA\\K88677"  asp-for="SQLServerConfig.UserId" value="ALECTA\\K88677">
                 </div>
                 <div class="form-group">
                     <label asp-for="SQLServerConfig.Password"></label>
@@ -47,7 +47,7 @@
         <div class="card-body">
             <div class="d-flex flex-row">
                 <div class="font-weight-bold h5 pr-2">About </div>
-                <div class="font-weight-bold h5">@Model.FileName</div>
+                <div class="font-weight-bold h5">@Model.TableName</div>
             </div>
             <hr>
             <div class="d-flex flex-row">
@@ -56,22 +56,28 @@
             </div>
             <form method="post" asp-controller="SqlServerToCSV" asp-action="Download" asp-route-conString="@Model.SQLServerConfig.ConString">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
                 <div class="form-group">
-                    <label asp-for="FileName" class="control-label"></label>
-                    <select asp-for="FileName" class="form-control" asp-items="@(new SelectList(Model.Database.Tables))">
-                        <option>Select a table</option>
+                    <label asp-for="TableName" class="control-label"></label>
+                    <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.Database.Tables))">
+                        <option value="ObjectCount">Select a table</option>
                         <option value="">Download all</option>
                     </select>
-                    <span asp-validation-for="FileName" class="text-danger"></span>
+                    <span asp-validation-for="TableName" class="text-danger"></span>
                 </div>
+                @{ 
+                    var keys = Model.ServicesNames.Select(x => x.Key).ToList();
+                    var values = Model.ServicesNames.Select(x => x.Value.ToString()).ToList();
+                } 
                 <div class="form-group">
-                    <label asp-for="ModelsNames" class="control-label"></label>
-                    <select asp-for="ModelsNames" class="form-control" asp-items="@(new SelectList(Model.ModelsNames))">
-                        <option>Select a model</option>
+                    <label asp-for="objectId" class="control-label"></label>
+                    <select asp-for="objectId" class="form-control" asp-items="@(new SelectList(Model.ServicesNames,"Value", "Key"))">
+                        <option value="">Select a type</option>
                         <option value="">Download all</option>
                     </select>
-                    <span asp-validation-for="FileName" class="text-danger"></span>
+                    <span asp-validation-for="objectId" class="text-danger"></span>
                 </div>
+
                 <div class="form-group">
                     <input type="submit" value="Download" class="btn btn-success text-white" />
                 </div>

@@ -1,0 +1,60 @@
+﻿@model FileConverter.ViewModels.DocumentFileViewModel
+
+@{
+
+    <div class="card-deck">
+        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
+            <div class="my-3">
+                <div class="card task-card">
+                    <div class="card-body">
+                        <h5 class="card-title"> <a asp-area="" asp-controller="SqlServerToCSV" asp-action="Fetch" class="text-decoration-none text-white">SQL Server to CSV</a></h5>
+                        <a asp-area="" asp-controller="SqlServerToCSV" asp-action="Fetch" role="button" class="btn btn-success mt-3 text-nowrap">
+                            Convert
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
+            <div class="my-3">
+                <div class="card task-card ">
+                    <div class="card-body">
+                        <h5 class="card-title"> <a asp-area="" asp-controller="XlsxToCSV" asp-action="Index" class="text-decoration-none text-white">XLSX To CSV</a></h5>
+                        <a asp-area="" asp-controller="XlsxToCSV" asp-action="Index" role="button" class="btn btn-success mt-3 text-nowrap">
+                            Convert
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
+            <div class="my-3">
+                <div class="card task-card ">
+                    <div class="card-body">
+                        <h5 class="card-title"> <a asp-area="" asp-controller="" asp-action="" class="text-decoration-none text-white">XLSX to Json</a></h5>
+                        <a asp-area="" asp-controller="" asp-action="" role="button" class="btn btn-success mt-3 text-nowrap disabled">
+                            Convert
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-6">
+            <div class="my-3">
+                <div class="card task-card ">
+                    <div class="card-body ">
+                        <h5 class="card-title"> <a asp-area="" asp-controller="" asp-action="" class="text-decoration-none text-white">SQL Server to Json</a></h5>
+                        <a asp-area="" asp-controller="" asp-action="" role="button" class="btn btn-success mt-3 text-nowrap disabled">
+                            Convert
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+}

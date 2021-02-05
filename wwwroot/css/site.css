@@ -80,20 +80,4 @@ body {
     line-height: 60px; /* Vertically center the text there */
 }
 
-/* Go to top button
-    -------------------------------------------------- */
 
-#go-to-top-btn {
-    display: none;
-    position: fixed;
-    bottom: 150px;
-    right: 30px;
-    z-index: 99;
-    cursor: pointer; /* Add a mouse pointer on hover */
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-}
-
-    #go-to-top-btn:hover {
-        background: rgba(0, 0, 0, 0.8);
-    }
