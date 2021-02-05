@@ -7,41 +7,38 @@
 
 <h1 class="text-center"><strong>SQL Server to CSV</strong></h1>
 
-<div class="card-deck">
-    <div class="card" id="SQLServerToCSVSubCard">
-        <div class="card-body">
-            <form method="post" asp-controller="SqlServerToCSV" asp-action="Fetch">
-                <div class="form-group">
-                    <label asp-for="SQLServerConfig.Server"></label>
-                    <input type="text" class="form-control" placeholder="e.g. dwpro3"  asp-for="SQLServerConfig.Server" value="int5_dev">
-                </div>
-                <div class="form-group">
-                    <label asp-for="SQLServerConfig.Database"></label>
-                    <input type="text" class="form-control" placeholder="e.g. UDGAHBAS"  asp-for="SQLServerConfig.Database" value="UDGAHBAS">
-                </div>
-                <div class="form-group">
-                    <label asp-for="SQLServerConfig.UserId"></label>
-                    <input type="text" class="form-control" placeholder="e.g. ALECTA\\K88677"  asp-for="SQLServerConfig.UserId" value="ALECTA\\K88677">
-                </div>
-                <div class="form-group">
-                    <label asp-for="SQLServerConfig.Password"></label>
-                    <input type="password" class="form-control" placeholder="******"  asp-for="SQLServerConfig.Password">
-                </div>
-                <div class="form-group">
-                    <input type="submit" value="Connect" class="btn btn-success text-white" />
-                </div>
+<div class="card" id="SQLServerToCSVSubCard">
+    <div class="card-body">
+        <form method="post" asp-controller="SqlServerToCSV" asp-action="Fetch">
+            <div class="form-group">
+                <label asp-for="SQLServerConfig.Server"></label>
+                <input type="text" class="form-control" placeholder="e.g. dwpro3" asp-for="SQLServerConfig.Server" value="int5_dev">
+            </div>
+            <div class="form-group">
+                <label asp-for="SQLServerConfig.Database"></label>
+                <input type="text" class="form-control" placeholder="e.g. UDGAHBAS" asp-for="SQLServerConfig.Database" value="UDGAHBAS">
+            </div>
+            <div class="form-group">
+                <label asp-for="SQLServerConfig.UserId"></label>
+                <input type="text" class="form-control" placeholder="e.g. ALECTA\\K88677" asp-for="SQLServerConfig.UserId" value="ALECTA\\K88677">
+            </div>
+            <div class="form-group">
+                <label asp-for="SQLServerConfig.Password"></label>
+                <input type="password" class="form-control" placeholder="******" asp-for="SQLServerConfig.Password">
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Connect" class="btn btn-success text-white" />
+            </div>
 
-            </form>
-        </div>
+        </form>
     </div>
 </div>
 
 
 <hr class="my-3 bg-white" />
-
 <h4><strong>Preview:</strong></h4>
 
-@if (@Model.Database.NumberOfTables != 0)
+@if (@Model.SQLServer.NumberOfTables != 0)
 {
     <div class="card bg-light text-dark mb-3">
         <div class="card-body">
@@ -52,32 +49,30 @@
             <hr>
             <div class="d-flex flex-row">
                 <div class="font-weight-bold pr-2">Number of tables: </div>
-                <div class="card-text">@Model.Database.NumberOfTables</div>
+                <div class="card-text">@Model.SQLServer.NumberOfTables</div>
             </div>
             <form method="post" asp-controller="SqlServerToCSV" asp-action="Download" asp-route-conString="@Model.SQLServerConfig.ConString">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
                 <div class="form-group">
                     <label asp-for="TableName" class="control-label"></label>
-                    <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.Database.Tables))">
-                        <option value="ObjectCount">Select a table</option>
-                        <option value="">Download all</option>
+                    <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.SQLServer.Tables))">
+                        <option value="">Select a table</option>
+                        <option value="Download all">Download all</option>
                     </select>
                     <span asp-validation-for="TableName" class="text-danger"></span>
                 </div>
-                @{ 
-                    var keys = Model.ServicesNames.Select(x => x.Key).ToList();
-                    var values = Model.ServicesNames.Select(x => x.Value.ToString()).ToList();
-                } 
+                @{
+                    var keys = Model.ObjectsTypesNames.Select(x => x.Key).ToList();
+                    var values = Model.ObjectsTypesNames.Select(x => x.Value.ToString()).ToList();
+                }
                 <div class="form-group">
                     <label asp-for="objectId" class="control-label"></label>
-                    <select asp-for="objectId" class="form-control" asp-items="@(new SelectList(Model.ServicesNames,"Value", "Key"))">
+                    <select asp-for="objectId" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
                         <option value="">Select a type</option>
                         <option value="">Download all</option>
                     </select>
                     <span asp-validation-for="objectId" class="text-danger"></span>
                 </div>
-
                 <div class="form-group">
                     <input type="submit" value="Download" class="btn btn-success text-white" />
                 </div>
@@ -117,7 +112,6 @@
         </div>
     </div>
 }
-
 
 
 

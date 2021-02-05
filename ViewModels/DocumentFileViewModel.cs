@@ -9,14 +9,14 @@ namespace FileConverter.ViewModels
 	public class DocumentFileViewModel
 	{
 		public SQLServerConfig SQLServerConfig { get; set; }
-		public DocumentFile DocumentFile { get; set; }
-		public IEnumerable<DocumentFile> DocumentFiles { get; set; } 
+	//	public DocumentFile DocumentFile { get; set; }
+	//	public IEnumerable<DocumentFile> DocumentFiles { get; set; } 
 		public ExcelSheet ExcelSheet { get; set; }
 		public CSV CSV { get; set; }
-		public Database Database { get; set; }
+		public SQLServer SQLServer { get; set; }
 		public string FilePath { get; set; }
 		public string TableName { get; set; }
-		public List<KeyValuePair<string, int>> ServicesNames { get; set; }
+		public List<KeyValuePair<string, int>> ObjectsTypesNames { get; set; }
 		public int objectId { get; set; }
 		public List<KeyValuePair<string, List<string>>> AttributesByTable { get; set; }
 	}

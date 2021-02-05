@@ -72,7 +72,7 @@ namespace FileConverter.Controllers
         public IActionResult Download(string filePath, string fileName)
         {           
             var csv = _CSVServices.ConvertXlsxToCSV(filePath);
-            var csvDownloadFormat = _CSVServices.BuildCsvString(csv);
+            var csvDownloadFormat = _CSVServices.BuildCsvStringFromXlsxFile(csv);
 
             var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
             return File(fileContents, "text/csv", $"{fileName}.csv");

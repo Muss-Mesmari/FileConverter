@@ -22,12 +22,11 @@ namespace FileConverter.Services
 
 		public ExcelSheet GetDataFromXlsxFile(string fileLink)
 		{
-			List<List<string>> table = new List<List<string>>();
-			List<string> headers = new List<string>();
+			var rows = new List<List<string>>();
+			var headers = new List<string>();
 			var numberOfColumns = 0;
 			var numberOfRows = 0;
-			var sheetName = string.Empty;
-			var FileName = string.Empty;
+			var sheetName = string.Empty;			
 
 			// For .net core, the next line requires the NuGet package, 
 			// System.Text.Encoding.CodePages
@@ -58,7 +57,7 @@ namespace FileConverter.Services
 						}
 						if (rowsCount != 0)
 						{
-							table.Add(row);
+							rows.Add(row);
 						}
 						
 						rowsCount += 1;
@@ -68,7 +67,7 @@ namespace FileConverter.Services
 
 			var excelSheet = new ExcelSheet
 			{
-				Table = table,
+				Rows = rows,
 				NumberOfColumns = numberOfColumns,
 				NumberOfRows = numberOfRows,
 				Headers = headers,

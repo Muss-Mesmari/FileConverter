@@ -11,7 +11,7 @@
     <div class="card-body">
         <form method="post" enctype="multipart/form-data" asp-controller="XlsxToCSV" asp-action="Upload">
             <div class="form-group file-area">
-                <label for="files">CSV <span>Please upload files in "xlsx" format</span></label>
+                <label for="files"><span>Please upload files in "xlsx" format</span></label>
                 <input type="file" name="files" id="files" required="required" />
                 <div class="file-dummy">
                     <div class="success">Great, your files are selected. Keep on.</div>
@@ -61,7 +61,7 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">
-                        @foreach (var header in Model.CSV.Headers)
+                        @foreach (var header in Model.CSV.HeadersFromXlsxFile)
                         {
                             @header
                         }
@@ -71,7 +71,7 @@
 
             var lineCount = 1;
             <tbody>
-                @foreach (var value in Model.CSV.Rows)
+                @foreach (var value in Model.CSV.RowsFromXlsxFile)
                 {
 
                     <tr>

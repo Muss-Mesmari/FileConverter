@@ -10,7 +10,7 @@ namespace FileConverter.Services
     {
         Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectId);
         CSV ConvertXlsxToCSV(string fileName);
-        string BuildCsvString(CSV csv);
+        string BuildCsvStringFromXlsxFile(CSV csv);
         string BuildCsvStringFromSQLServer(CSV csv);
     }
 }

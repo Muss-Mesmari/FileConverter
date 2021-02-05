@@ -30,12 +30,11 @@ namespace FileConverter.Services
             var conString = $"Server={server};Database={database};User Id={userId};password={password};Trusted_Connection=True;MultipleActiveResultSets=true";
             return conString;
         }
-        public async Task<List<KeyValuePair<string, List<string>>>> GetAllAttributesAsync(string conString, string tableName, string servicesNames)
+        public async Task<List<KeyValuePair<string, List<string>>>> GetAllAttributesByTableAsync(string conString, string tableName, string servicesNames)
         {
             var allAttributesByTable = new List<KeyValuePair<string, List<string>>>();
 
             var tables = new List<string>();
-
             if (!string.IsNullOrEmpty(tableName))
             {
                 var attributes = await GetAttributesByTableAsync(conString, tableName);
@@ -43,7 +42,7 @@ namespace FileConverter.Services
             }
             else
             {
-                tables = await GetAllDatabaseTablesAsync(conString);
+                tables = await GetAllTablesAsync(conString);
 
                 for (int i = 0; i < tables.Count(); i++)
                 {
@@ -54,7 +53,7 @@ namespace FileConverter.Services
 
             return allAttributesByTable;
         }
-        public async Task<List<string>> GetAllDatabaseTablesAsync(string conString)
+        public async Task<List<string>> GetAllTablesAsync(string conString)
         {
             using (SqlConnection connection = new SqlConnection(conString))
             {
@@ -92,7 +91,7 @@ namespace FileConverter.Services
                 return attributeValues;
             }
         }
-        private async Task<List<KeyValuePair<string, int>>> GetDataTypesFromObjectCountTableAsync(string conString, string table)
+        private async Task<List<KeyValuePair<string, int>>> GetObjectsTypesFromTableByTableNameAsync(string conString, string table)
         {
             var sql = $@"SELECT DISTINCT [className], [classId] FROM [UDGAHBAS].[dbo].[{table}] ORDER BY [className] ";
 
@@ -116,7 +115,7 @@ namespace FileConverter.Services
                 return attributeValues;
             }
         }
-        public async Task<List<KeyValuePair<string, int>>> GetDataFromTableAsync(string conString, int objectId)
+        public async Task<List<KeyValuePair<string, int>>> GetDataFromTableByIdAsync(string conString, int objectId)
         {
             var sql = $@"  SELECT [classId] ,[name] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {objectId} ORDER BY [name]";
 
@@ -163,17 +162,31 @@ namespace FileConverter.Services
                 return rows;
             }
         }
-        public async Task<List<KeyValuePair<string, int>>> GetAllDataTypesNamesAsync(List<string> tables, string conString)
+        public async Task<List<KeyValuePair<string, int>>> GetAllObjectsTypesNamesAsync(List<string> tables, string conString)
         {
             List<KeyValuePair<string, int>> row = new List<KeyValuePair<string, int>>();
             foreach (var table in tables)
             {
                 if (table == "ObjectCount")
                 {
-                    row = await GetDataTypesFromObjectCountTableAsync(conString, table);
+                    row = await GetObjectsTypesFromTableByTableNameAsync(conString, table);
                 }
             }
             return row;
+        }
+        public async Task<string> GetObjectNameByIdAsync(int objectId, string conString)
+        {
+            var tableName = string.Empty;
+            var tables = await GetAllTablesAsync(conString);
+            var objectsNamesAndIds = await GetAllObjectsTypesNamesAsync(tables, conString);
+            foreach (var o in objectsNamesAndIds)
+            {
+                if (o.Value == objectId)
+                {
+                    tableName = o.Key;
+                }
+            }
+            return tableName;
         }
     }
 

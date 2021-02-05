@@ -6,10 +6,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace FileConverter.Models
 {
-	public class DocumentFile
-	{
-		public int Id { get; set; }
-		public string Name { get; set; }
-		public string Format { get; set; }
-	}
+	//public class DocumentFile
+	//{
+	//	public int Id { get; set; }
+	//	public string Name { get; set; }
+	//	public string Format { get; set; }
+	//}
 }

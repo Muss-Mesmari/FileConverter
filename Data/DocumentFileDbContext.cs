@@ -13,7 +13,7 @@ namespace FileConverter.Data
 		public DocumentFileDbContext(DbContextOptions<DocumentFileDbContext> options) : base(options)
 		{
 		}
-		public DbSet<DocumentFile> DocumentFile { get; set; }
+	//	public DbSet<DocumentFile> DocumentFile { get; set; }
 
 	}
 }

@@ -1,4 +1,4 @@
-﻿@model FileConverter.ViewModels.DocumentFileViewModel
+﻿@*@model FileConverter.ViewModels.DocumentFileViewModel
 
 @{
     ViewData["Title"] = "Fetch";
@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    @if (Model.ExcelSheet.Table != null)
+    @if (Model.ExcelSheet.Rows != null)
     {
         <table class="table table-bordered table-striped table-hover">
             @{
@@ -57,7 +57,7 @@
                 </tr>
 
                 var lineCount = 1;
-                @foreach (var table in Model.ExcelSheet.Table)
+                @foreach (var table in Model.ExcelSheet.Rows)
                 {
                     <tr>
                         <th scope="row">@lineCount</th>
@@ -71,4 +71,4 @@
             }
         </table>
     }
-</div>
+</div>*@
