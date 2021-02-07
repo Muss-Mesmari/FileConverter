@@ -238,5 +238,31 @@ namespace FileConverter.Services
 
 			return builder.ToString();
 		}
+
+		public List<string> BuildMultipleCsvStringsFromSQLServer(CSV csv)
+		{			
+			var builder = new List<string>();
+
+			if (csv.HeadersFromSqlServer != null)
+			{
+				var headers = new StringBuilder();
+                foreach (var header in csv.HeadersFromSqlServer)
+                {
+					headers.AppendLine(header);
+                }
+				builder.Add(headers.ToString());
+			}
+
+			if (csv.RowsFromSqlServer != null)
+			{
+				var doubleQuote = "\"";
+				foreach (var row in csv.RowsFromSqlServer)
+				{
+					builder.Add(doubleQuote + doubleQuote + row);
+				}				
+			}
+
+			return builder;
+		}
 	}
 }

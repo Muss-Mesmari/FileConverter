@@ -12,5 +12,6 @@ namespace FileConverter.Services
         CSV ConvertXlsxToCSV(string fileName);
         string BuildCsvStringFromXlsxFile(CSV csv);
         string BuildCsvStringFromSQLServer(CSV csv);
+        List<string> BuildMultipleCsvStringsFromSQLServer(CSV csv);
     }
 }

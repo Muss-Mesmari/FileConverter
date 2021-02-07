@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Text;
+using System.IO.Compression;
 
 namespace FileConverter.Services
 {
@@ -64,6 +65,35 @@ namespace FileConverter.Services
         {
             var fileContents = Encoding.UTF8.GetBytes(file);
             return fileContents;
+        }
+
+        public Byte[] GetZipFileContents(List<string> files)
+        {
+            using var memoryStream = new MemoryStream();
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            {
+                for (int i = 0; i < files.Count(); i++)
+                {
+                    var name = files[i].Split(",").LastOrDefault();
+                    var newName = string.Empty;
+                    if (name.Contains("\"\""))
+                    {
+                        newName = name.Replace("\"", "").Trim();
+                    }
+                    else if (string.IsNullOrEmpty(name))
+                    {
+                        newName = $"Converted SQLServer file No. {i}";
+                    }
+
+                    var file1 = archive.CreateEntry($"{newName}.csv");
+                    using (var streamWriter = new StreamWriter(file1.Open()))
+                    {
+                        streamWriter.Write(files[i]);
+                    }
+                }
+            }
+
+            return memoryStream.ToArray();
         }
 
     }

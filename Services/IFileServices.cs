@@ -8,6 +8,7 @@ namespace FileConverter.Services
 {
     public interface IFileServices
     {
+        Byte[] GetZipFileContents(List<string> files);
         Byte[] GetFileContents(string file);
         Task<Files> UploadAsync(List<IFormFile> file);
     }

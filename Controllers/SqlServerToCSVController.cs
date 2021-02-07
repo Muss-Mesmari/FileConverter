@@ -16,6 +16,7 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
+using System.IO.Compression;
 
 namespace FileConverter.Controllers
 {
@@ -43,7 +44,7 @@ namespace FileConverter.Controllers
         [HttpGet]
         public IActionResult Fetch()
         {
-            var sQLServer = new SQLServer();        
+            var sQLServer = new SQLServer();
 
             return View(new DocumentFileViewModel
             {
@@ -55,15 +56,14 @@ namespace FileConverter.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Fetch(DocumentFileViewModel newDocumentFile)
         {
-            var fileName = newDocumentFile.TableName;
-
             var conString = _databaseServices.GetConfigString(newDocumentFile);
             var sQLServerConfig = new SQLServerConfig
             {
-                ConString = conString
-            };            
+                ConString = conString,
+                Database = newDocumentFile.SQLServerConfig.Database
+            };
 
-            var attributesByTable = await _databaseServices.GetAllAttributesByTableAsync(conString, fileName, null);
+            var attributesByTable = await _databaseServices.GetAllAttributesByTableAsync(conString, null, null);
             var tables = await _databaseServices.GetAllTablesAsync(conString);
             var numberOfTables = attributesByTable.Count();
             var objectsTypesNames = await _databaseServices.GetAllObjectsTypesNamesAsync(tables, conString);
@@ -86,28 +86,17 @@ namespace FileConverter.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Download(string tableName, string conString, int objectId)
-        {           
+        {
             var csv = new CSV();
             if (tableName == null && objectId > 0)
             {
                 csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);
                 tableName = await _databaseServices.GetObjectNameByIdAsync(objectId, conString);
-
-                //tableName = objectId.ToString();
-                //var tables = await _databaseServices.GetAllDatabaseTablesAsync(conString);
-                //var objectsNamesAndIds = await _databaseServices.GetAllDataTypesNamesAsync(tables, conString);
-                //foreach (var o in objectsNamesAndIds)
-                //{
-                //    if (o.Value == objectId)
-                //    {
-                //        tableName = o.Key;
-                //    }
-                //}
             }
             else if (tableName != null && objectId == 0)
             {
                 tableName = "ObjectCount";
-                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);                
+                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);
             }
             else
             {
@@ -124,9 +113,19 @@ namespace FileConverter.Controllers
                 }
 
             }
-            var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
-            var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
-            return File(fileContents, "text/csv", $"{tableName}.csv");
+
+            if (false)
+            {
+                var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
+                var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
+                return File(fileContents, "text/csv", $"{tableName}.csv");
+            }
+            else
+            {
+                var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
+                var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);
+                return File(fileContents, "application/zip", $"{tableName}.zip");
+            }
         }
 
     }

@@ -4,7 +4,6 @@
     ViewData["Title"] = "SQL Server to CSV";
 }
 
-
 <h1 class="text-center"><strong>SQL Server to CSV</strong></h1>
 
 <div class="card" id="SQLServerToCSVSubCard">
@@ -40,45 +39,66 @@
 
 @if (@Model.SQLServer.NumberOfTables != 0)
 {
-    <div class="card bg-light text-dark mb-3">
-        <div class="card-body">
+
+    <div class="card bg-white text-dark mb-3">
+        <div class="card-header">
             <div class="d-flex flex-row">
-                <div class="font-weight-bold h5 pr-2">About </div>
-                <div class="font-weight-bold h5">@Model.TableName</div>
+                <div class="font-weight-bold pr-2">Database name: </div>
+                <div class="card-text">@Model.SQLServerConfig.Database.</div>
             </div>
-            <hr>
             <div class="d-flex flex-row">
                 <div class="font-weight-bold pr-2">Number of tables: </div>
                 <div class="card-text">@Model.SQLServer.NumberOfTables</div>
             </div>
-            <form method="post" asp-controller="SqlServerToCSV" asp-action="Download" asp-route-conString="@Model.SQLServerConfig.ConString">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                <div class="form-group">
-                    <label asp-for="TableName" class="control-label"></label>
-                    <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.SQLServer.Tables))">
-                        <option value="">Select a table</option>
-                        <option value="Download all">Download all</option>
-                    </select>
-                    <span asp-validation-for="TableName" class="text-danger"></span>
-                </div>
-                @{
-                    var keys = Model.ObjectsTypesNames.Select(x => x.Key).ToList();
-                    var values = Model.ObjectsTypesNames.Select(x => x.Value.ToString()).ToList();
-                }
-                <div class="form-group">
-                    <label asp-for="objectId" class="control-label"></label>
-                    <select asp-for="objectId" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
-                        <option value="">Select a type</option>
-                        <option value="">Download all</option>
-                    </select>
-                    <span asp-validation-for="objectId" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <input type="submit" value="Download" class="btn btn-success text-white" />
-                </div>
-            </form>
+            <hr>
+            <div class="font-weight-bold">Downloading Options: </div>
+            <div class="mb-3 text-muted">Choose how do you want to download; by table or by type:</div>
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active font-weight-normal" id="download-by-type-btn" onclick="disable()">Downlaod by type(s)</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="download-by-table-btn" onclick="enable()">Downlaod by table(s)</a>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div>
+                <form method="post" asp-controller="SqlServerToCSV" asp-action="Download" asp-route-conString="@Model.SQLServerConfig.ConString">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    @{
+                        var keys = Model.ObjectsTypesNames.Select(x => x.Key).ToList();
+                        var values = Model.ObjectsTypesNames.Select(x => x.Value.ToString()).ToList();
+                    }
+                    <div class="form-group" id="downloading-type-option" style="display:block">
+                        <label asp-for="objectId" class="control-label"></label>
+                        <select asp-for="objectId" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
+                            <option value="">Select a type</option>
+                            <option value="">Download all</option>
+                        </select>
+                        <span asp-validation-for="objectId" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="form-group" id="downloading-table-option" style="display:none">
+                        <label asp-for="TableName" class="control-label labels"></label>
+                        <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.SQLServer.Tables))">
+                            <option value="">Select a table</option>
+                            <option value="Download all">Download all</option>
+                        </select>
+                        <span asp-validation-for="TableName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="submit" value="Download" class="btn btn-success text-white" />
+                    </div>
+
+                </form>
+            </div>
         </div>
     </div>
+
+
 
 
     <div class="accordion" id="accordionExample">
@@ -114,4 +134,7 @@
 }
 
 
+<script>
+
+</script>
 
