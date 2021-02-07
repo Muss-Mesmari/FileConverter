@@ -17,7 +17,10 @@ namespace FileConverter.ViewModels
 		public string FilePath { get; set; }
 		public string TableName { get; set; }
 		public List<KeyValuePair<string, int>> ObjectsTypesNames { get; set; }
-		public int objectId { get; set; }
+		public int ObjectId { get; set; }
 		public List<KeyValuePair<string, List<string>>> AttributesByTable { get; set; }
+
+		public bool IsType { get; set; }
+		public bool IsTable { get; set; }
 	}
 }

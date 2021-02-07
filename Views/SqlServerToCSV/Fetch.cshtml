@@ -70,15 +70,16 @@
                         var keys = Model.ObjectsTypesNames.Select(x => x.Key).ToList();
                         var values = Model.ObjectsTypesNames.Select(x => x.Value.ToString()).ToList();
                     }
+
                     <div class="form-group" id="downloading-type-option" style="display:block">
-                        <label asp-for="objectId" class="control-label"></label>
-                        <select asp-for="objectId" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
+                        <label asp-for="ObjectId" class="control-label"></label>
+                        <select asp-for="ObjectId" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
                             <option value="">Select a type</option>
                             <option value="">Download all</option>
                         </select>
-                        <span asp-validation-for="objectId" class="text-danger"></span>
+                        <span asp-validation-for="ObjectId" class="text-danger"></span>
                     </div>
-
+                    <input type="hidden" asp-for="IsType" value="@true" />
 
                     <div class="form-group" id="downloading-table-option" style="display:none">
                         <label asp-for="TableName" class="control-label labels"></label>
@@ -88,6 +89,7 @@
                         </select>
                         <span asp-validation-for="TableName" class="text-danger"></span>
                     </div>
+                    <input type="hidden" asp-for="IsTable" value="@true" />
 
                     <div class="form-group">
                         <input type="submit" value="Download" class="btn btn-success text-white" />

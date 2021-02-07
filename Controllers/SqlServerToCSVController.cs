@@ -85,7 +85,7 @@ namespace FileConverter.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectId)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectId, bool isTyp, bool isTable)
         {
             var csv = new CSV();
             if (tableName == null && objectId > 0)
