@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Text;
 using System.IO.Compression;
+using System.Text.RegularExpressions;
 
 namespace FileConverter.Services
 {
@@ -63,18 +64,27 @@ namespace FileConverter.Services
         }
         public Byte[] GetFileContents(string file)
         {
-            var fileContents = Encoding.UTF8.GetBytes(file);
+            var data = Encoding.UTF8.GetBytes(file);
+            var fileContents = Encoding.UTF8.GetPreamble().Concat(data).ToArray();
             return fileContents;
         }
-
         public Byte[] GetZipFileContents(List<string> files)
         {
             using var memoryStream = new MemoryStream();
-            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true, Encoding.UTF8))
             {
                 for (int i = 0; i < files.Count(); i++)
                 {
-                    var name = files[i].Split(",").LastOrDefault();
+                    var name = string.Empty; 
+                    if (files[i].ToString().Contains("\""))
+                    {
+                        name = files[i].Split(",")[1];
+                    }
+                    else
+                    {
+                        name = files[i].Split(",").LastOrDefault();
+                    }
+                   
                     var newName = string.Empty;
                     if (name.Contains("\"\""))
                     {
@@ -85,13 +95,13 @@ namespace FileConverter.Services
                         newName = $"Converted SQLServer file No. {i}";
                     }
 
-                    var file1 = archive.CreateEntry($"{newName}.csv");
-                    using (var streamWriter = new StreamWriter(file1.Open()))
+                    var file1 = archive.CreateEntry($"{newName}.csv", CompressionLevel.Optimal);
+                    using (var streamWriter = new StreamWriter(file1.Open(), Encoding.UTF8))
                     {
                         streamWriter.Write(files[i]);
                     }
                 }
-            }
+            }     
 
             return memoryStream.ToArray();
         }

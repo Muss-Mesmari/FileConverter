@@ -79,7 +79,7 @@
                         </select>
                         <span asp-validation-for="ObjectId" class="text-danger"></span>
                     </div>
-                    <input type="hidden" asp-for="IsType" value="@true" />
+
 
                     <div class="form-group" id="downloading-table-option" style="display:none">
                         <label asp-for="TableName" class="control-label labels"></label>
@@ -89,7 +89,6 @@
                         </select>
                         <span asp-validation-for="TableName" class="text-danger"></span>
                     </div>
-                    <input type="hidden" asp-for="IsTable" value="@true" />
 
                     <div class="form-group">
                         <input type="submit" value="Download" class="btn btn-success text-white" />

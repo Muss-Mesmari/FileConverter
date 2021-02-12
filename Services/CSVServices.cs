@@ -9,260 +9,344 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using System.Text;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace FileConverter.Services
 {
-	public class CSVServices : ICSVServices
-	{
-		private readonly DocumentFileDbContext _documentFileDbContext;
-		private readonly IXlsxServices _xlsxServices;
-		private readonly IDatabaseServices _databaseServices;
-		public CSVServices(
-			DocumentFileDbContext documentFileDbContext, 
-			IXlsxServices xlsxServices,
-			IDatabaseServices databaseServices
-			)
-		{
-			_documentFileDbContext = documentFileDbContext;
-			_xlsxServices = xlsxServices;
-			_databaseServices = databaseServices;
-		}
+    public class CSVServices : ICSVServices
+    {
+        private readonly DocumentFileDbContext _documentFileDbContext;
+        private readonly IXlsxServices _xlsxServices;
+        private readonly IDatabaseServices _databaseServices;
+        public CSVServices(
+            DocumentFileDbContext documentFileDbContext,
+            IXlsxServices xlsxServices,
+            IDatabaseServices databaseServices
+            )
+        {
+            _documentFileDbContext = documentFileDbContext;
+            _xlsxServices = xlsxServices;
+            _databaseServices = databaseServices;
+        }
 
-		public CSV ConvertXlsxToCSV(string filePath)
-		{
-			var excelSheetHeaders = _xlsxServices.GetDataFromXlsxFile(filePath).Headers;
-			var excelSheetRows = _xlsxServices.GetDataFromXlsxFile(filePath).Rows;
-			var excelSheet = _xlsxServices.GetDataFromXlsxFile(filePath);
+        public CSV ConvertXlsxToCSV(string filePath)
+        {
+            var excelSheetHeaders = _xlsxServices.GetDataFromXlsxFile(filePath).Headers;
+            var excelSheetRows = _xlsxServices.GetDataFromXlsxFile(filePath).Rows;
+            var excelSheet = _xlsxServices.GetDataFromXlsxFile(filePath);
 
-			var csv = new CSV
-			{
-				HeadersFromXlsxFile = ConvertXlsxHeadersToCSV(excelSheetHeaders),
-				RowsFromXlsxFile = ConvertXlsxRowsToCSV(excelSheetRows),
-				NumberOfRows = CountCsvRows(excelSheet),
-				NumberOfHeaders = CountCsvHeaders(excelSheet)
-			};
-			return csv;
-		}
-		private string ConvertXlsxHeadersToCSV(List<string> excelSheetHeaders)
-		{
-			var csvHeaders = String.Join(",", excelSheetHeaders);
-			return csvHeaders;
-		}
-		private List<string> ConvertXlsxRowsToCSV(List<List<string>> excelSheetTable)
-		{
-			List<string> csvRows = new List<string>();
-
-			foreach (var row in excelSheetTable)
-			{
-				var doubleQuote = "\"";
-				var validCsvRow = ValidateStrings(row);
-
-				var csvRow = doubleQuote + string.Join(@""",""", validCsvRow) + doubleQuote;
-				csvRows.Add(csvRow);
-			}
-
-			return csvRows;
-		}
-		private List<string> ValidateStrings(List<string> row)
-		{
-			List<string> csvRows = new List<string>();
-
-			foreach (var value in row)
-			{
-				if (value.GetType() == typeof(string))
-				{
-					if (value.Contains("\""))
-					{
-						var newValue = value.Replace("\"", "\"\"");
-						csvRows.Add(newValue);
-					}
-					else
-					{
-						csvRows.Add(value);
-					}
-				}
-				else
-				{
-					csvRows.Add(value);
-				}
-
-			}
-			return csvRows;
-		}
-
-		//private List<string> CreateValidCSVRow(List<string> row)
-		//{
-		//	List<string> csvRows = new List<string>();
-
-		//	foreach (var value in row)
-		//	{
-		//              if (value.GetType() == typeof(int))
-		//              {
-		//			if (value.Contains(","))
-		//			{
-		//				var newValue = value.Replace(",", ".");
-		//				csvRows.Add(newValue);
-		//			}
-		//			else
-		//			{
-		//				csvRows.Add(value);
-		//			}
-		//		}
-		//		else
-		//		{
-		//			csvRows.Add(value);
-		//		}
-
-		//	}
-		//	return csvRows;
-		//}       
-		private int CountCsvRows(ExcelSheet excelSheet)
-		{
-			var numberOfRows = excelSheet.Rows.Count();
-			var numberOfHeaders = 1;
-			var totalRows = numberOfRows + numberOfHeaders;
-
-			return totalRows;
-		}
-		private int CountCsvHeaders(ExcelSheet excelSheet)
-		{
-			var numberOfHeaders = excelSheet.Headers.Count();
-			return numberOfHeaders;
-		}
-		public string BuildCsvStringFromXlsxFile(CSV csv)
-		{
-			var doubleQuote = "\"";
-			var builder = new StringBuilder();
-
-			builder.AppendLine(csv.HeadersFromXlsxFile);
-
-			if (csv.RowsFromXlsxFile != null)
-			{
-				foreach (var row in csv.RowsFromXlsxFile)
-				{
-					builder.AppendLine(doubleQuote + doubleQuote + row);
-				}
-			}
-
-			return builder.ToString();
-		}
-
-
-		public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectId)
-		{
-			var sqlServerAttributesByTable = new List<KeyValuePair<string, List<string>>>();
-			var sqlServerRows = new List<string>();
-
-			if (objectId == 0)
+            var csv = new CSV
             {
-				sqlServerAttributesByTable = await _databaseServices.GetAllAttributesByTableAsync(conString, tableName, null);
-			}
-            else
-            {
-				var sqlServerRowsByTables = await _databaseServices.GetDataFromTableByIdAsync(conString, objectId);
-				sqlServerRows = ConvertSqlServerRowToCSV(sqlServerRowsByTables);
-			}
+                HeadersFromXlsxFile = ConvertXlsxHeadersToCSV(excelSheetHeaders),
+                RowsFromXlsxFile = ConvertXlsxRowsToCSV(excelSheetRows),
+                NumberOfRows = CountCsvRows(excelSheet),
+                NumberOfHeaders = CountCsvHeaders(excelSheet)
+            };
+            return csv;
+        }
+        private string ConvertXlsxHeadersToCSV(List<string> excelSheetHeaders)
+        {
+            var csvHeaders = String.Join(",", excelSheetHeaders);
+            return csvHeaders;
+        }
+        private List<string> ConvertXlsxRowsToCSV(List<List<string>> excelSheetTable)
+        {
+            List<string> csvRows = new List<string>();
 
-			var sqlServerHeaders = new List<string>();
-			if (!string.IsNullOrEmpty(tableName))
+            foreach (var row in excelSheetTable)
             {
-				sqlServerHeaders = MatchSqlServerHeadersByTable(tableName, sqlServerAttributesByTable);
-			}
-            else
-            {
-				sqlServerHeaders = ConvertSqlServerHeadersToCSV(sqlServerAttributesByTable);
-			}
-			
-			var csv = new CSV
-			{
-				HeadersFromSqlServer = sqlServerHeaders,
-				RowsFromSqlServer = sqlServerRows
-			};
-			return csv;
-		}
-		private List<string> MatchSqlServerHeadersByTable(string tableName, List<KeyValuePair<string, List<string>>> sqlServerAttributesByTable)
-		{
-			List<string> csvHeaders = new List<string>();
+                var doubleQuote = "\"";
+                var validCsvRow = ValidateStrings(row);
 
-			for (int i = 0; i < sqlServerAttributesByTable.Count(); i++)
-			{
-				if (sqlServerAttributesByTable[i].Key == tableName)
-				{
-					var header = String.Join(",", sqlServerAttributesByTable[i].Value);
-					csvHeaders.Add(header);
-				}
-			}
-			return csvHeaders;
-		}
-		private List<string> ConvertSqlServerHeadersToCSV(List<KeyValuePair<string, List<string>>> sqlServerAttributesByTable)
-		{
-			List<string> csvHeaders = new List<string>();
-            for (int i = 0; i < sqlServerAttributesByTable.Count(); i++)
-            {				
-				var header = String.Join(",", sqlServerAttributesByTable[i].Value);
-				csvHeaders.Add(header);
-			}		
-			return csvHeaders;
-		}
-		private List<string> ConvertSqlServerRowToCSV(List<KeyValuePair<string, int>> sqlServerRowsByTables)
-		{
-			List<string> csvRows = new List<string>();
-			for (int i = 0; i < sqlServerRowsByTables.Count(); i++)
-			{
-				var doubleQuote = "\"";
-				var csvRow = doubleQuote + sqlServerRowsByTables[i].Value.ToString() + doubleQuote + doubleQuote + "," + doubleQuote + doubleQuote + sqlServerRowsByTables[i].Key.ToString() + doubleQuote + doubleQuote;
-				csvRows.Add(csvRow);
-			}
-			return csvRows;
-		}
-		public string BuildCsvStringFromSQLServer(CSV csv)
-		{
-			var doubleQuote = "\"";
+                var csvRow = doubleQuote + string.Join(@""",""", validCsvRow) + doubleQuote;
+                csvRows.Add(csvRow);
+            }
+
+            return csvRows;
+        }
+        private List<string> ValidateStrings(List<string> row)
+        {
+            List<string> csvRows = new List<string>();
+
+            foreach (var value in row)
+            {
+                if (value.GetType() == typeof(string))
+                {
+                    if (value.Contains("\""))
+                    {
+                        var newValue = value.Replace("\"", "\"\"");
+                        csvRows.Add(newValue);
+                    }
+                    else
+                    {
+                        csvRows.Add(value);
+                    }
+                }
+                else
+                {
+                    csvRows.Add(value);
+                }
+
+            }
+            return csvRows;
+        }
+        private List<string> CreateValidCSVRow(List<string> row)
+        {
+            List<string> csvRows = new List<string>();
+
+            foreach (var value in row)
+            {
+                if (value.GetType() == typeof(string))
+                {
+                    var validValue = WebUtility.HtmlDecode(Regex.Replace(value, "<[^>]*(>|$)", string.Empty)).Replace("\n", " ").Replace("\"", "\"\"");
+                    csvRows.Add(validValue);
+                }
+                else
+                {
+                    csvRows.Add(value);
+                }
+            }
+            return csvRows;
+        }
+        private int CountCsvRows(ExcelSheet excelSheet)
+        {
+            var numberOfRows = excelSheet.Rows.Count();
+            var numberOfHeaders = 1;
+            var totalRows = numberOfRows + numberOfHeaders;
+
+            return totalRows;
+        }
+        private int CountCsvHeaders(ExcelSheet excelSheet)
+        {
+            var numberOfHeaders = excelSheet.Headers.Count();
+            return numberOfHeaders;
+        }
+        public string BuildCsvStringFromXlsxFile(CSV csv)
+        {
+            var doubleQuote = "\"";
             var builder = new StringBuilder();
 
-			if (csv.HeadersFromSqlServer != null)
-			{
-				foreach (var header in csv.HeadersFromSqlServer)
-				{
-					builder.AppendLine(header);
-				}
-			}
+            builder.AppendLine(csv.HeadersFromXlsxFile);
 
-			if (csv.RowsFromSqlServer != null)
-			{
-				foreach (var row in csv.RowsFromSqlServer)
-				{
-					builder.AppendLine(doubleQuote + doubleQuote + row);
-				}
-			}
+            if (csv.RowsFromXlsxFile != null)
+            {
+                foreach (var row in csv.RowsFromXlsxFile)
+                {
+                    builder.AppendLine(doubleQuote + doubleQuote + row);
+                }
+            }
 
-			return builder.ToString();
-		}
+            return builder.ToString();
+        }
 
-		public List<string> BuildMultipleCsvStringsFromSQLServer(CSV csv)
-		{			
-			var builder = new List<string>();
 
-			if (csv.HeadersFromSqlServer != null)
-			{
-				var headers = new StringBuilder();
+
+        public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectId)
+        {
+            var sqlServerAttributesByTable = new List<KeyValuePair<string, List<string>>>();
+            var sqlServerRows = new List<string>();
+
+            if (objectId == 0)
+            {
+                sqlServerAttributesByTable = await _databaseServices.GetAllAttributesSortedByTableAsync(conString, tableName);
+            }
+            else
+            {
+                var sqlServerObjects = await _databaseServices.GetObjectsNamesAndObjectIdsByClassIdAsync(conString, objectId);
+                var sqlServerPropertiesNames = await _databaseServices.GetPropertiesNamesByPropertiesIdsAsync(conString, objectId);
+                var sqlServerPropertiesValues = await _databaseServices.GetPropertiesValuesByObjectIdsSortedByObjectIdsAsync(conString, objectId);
+                sqlServerRows = ConvertSqlServerToCSV(sqlServerObjects, sqlServerPropertiesNames, sqlServerPropertiesValues);
+            }
+
+            var sqlServerHeaders = new List<string>();
+            if (!string.IsNullOrEmpty(tableName))
+            {
+                sqlServerHeaders = MatchSqlServerHeadersByTable(tableName, sqlServerAttributesByTable);
+            }
+            else
+            {
+                sqlServerHeaders = GetSqlServerHeaders(sqlServerAttributesByTable, null);
+            }
+
+            var csv = new CSV
+            {
+                HeadersFromSqlServer = sqlServerHeaders,
+                RowsFromSqlServer = sqlServerRows
+            };
+            return csv;
+        }
+        private List<string> MatchSqlServerHeadersByTable(string tableName, List<KeyValuePair<string, List<string>>> sqlServerAttributesByTable)
+        {
+            List<string> csvHeaders = new List<string>();
+
+            for (int i = 0; i < sqlServerAttributesByTable.Count(); i++)
+            {
+                if (sqlServerAttributesByTable[i].Key == tableName)
+                {
+                    var header = String.Join(",", sqlServerAttributesByTable[i].Value);
+                    csvHeaders.Add(header);
+                }
+            }
+            return csvHeaders;
+        }
+        private List<string> GetSqlServerHeaders(List<KeyValuePair<string, List<string>>> sqlServerAttributesByTable, List<KeyValuePair<int, List<KeyValuePair<string, string>>>> sortedPropertiesByObjectId)
+        {
+            List<string> csvHeaders = new List<string>();
+            if (sqlServerAttributesByTable != null)
+            {
+                for (int i = 0; i < sqlServerAttributesByTable.Count(); i++)
+                {
+                    var header = String.Join(",", sqlServerAttributesByTable[i].Value);
+                    csvHeaders.Add(header);
+                }
+                return csvHeaders;
+            }
+            else
+            {
+               
+                for (int i = 0; i < sortedPropertiesByObjectId.Count(); i++)
+                {
+                    if (i == 1)
+                    {
+                        for (int j = 0; j < sortedPropertiesByObjectId[i].Value.Count(); j++)
+                        {
+                            var header = String.Join(",", sortedPropertiesByObjectId[j].Value[j].Key);
+                            csvHeaders.Add(header);
+                        }
+                    }
+                }
+
+                return csvHeaders;
+            }
+        }
+        private List<List<string>> GetSqlServerRows(List<KeyValuePair<int, List<KeyValuePair<string, string>>>> sortedPropertiesByObjectId)
+        {
+            var rows = new List<List<string>>();
+            foreach (var sortedProperties in sortedPropertiesByObjectId)
+            {
+                var row = new List<string>();
+                foreach (var value in sortedProperties.Value)
+                {
+                    row.Add(value.Value);
+                }
+                rows.Add(row);
+            }
+            return rows;
+        }
+        private List<KeyValuePair<int, List<KeyValuePair<string, string>>>> SortSqlServerDataByObjectIdsAndPropertiesNames(List<KeyValuePair<string, int>> ObjectsNamesAndIds, List<KeyValuePair<string, int>> propertiesNames, List<KeyValuePair<int, KeyValuePair<int, string>>> propertiesValues)
+        {
+            var propertiesSortedByObjectIdList = new List<KeyValuePair<int, List<KeyValuePair<string, string>>>>();
+
+            foreach (var o in ObjectsNamesAndIds)
+            {
+                var properties = new List<KeyValuePair<string, string>>();
+                foreach (var propertyName in propertiesNames)
+                {
+                    foreach (var propertyValue in propertiesValues)
+                    {
+                        if (o.Value == propertyValue.Key) // if the objectId == propertyId of the property keyValuePair
+                        {
+                            if (propertyName.Value == propertyValue.Value.Key)
+                            {
+                                properties.Add(new KeyValuePair<string, string>(propertyName.Key, propertyValue.Value.Value));
+
+                            }
+                        }
+                    }
+                }
+
+                // Get the unused properties names
+                var p1 = propertiesNames.Select(s1 => s1.Key).ToList();
+                var p2 = properties.Select(s2 => s2.Key).ToList();
+                var emptyProperties = new List<string>();
+                emptyProperties.AddRange(p1.Except(p2));
+                emptyProperties.AddRange(p2.Except(p1));
+
+
+                // Assign an empty value to the unused properties and add them to the list
+                foreach (var property in emptyProperties)
+                {
+                    properties.Add(new KeyValuePair<string, string>(property, string.Empty));
+                }
+
+                // order properties by name
+                var propertiesOrderedByName = properties.OrderBy(p => p.Key).ToList();
+
+                var propertiesSortedByObjectId = new KeyValuePair<int, List<KeyValuePair<string, string>>>(o.Value, propertiesOrderedByName);
+                propertiesSortedByObjectIdList.Add(propertiesSortedByObjectId);
+            }
+
+            return propertiesSortedByObjectIdList;
+        }
+        private List<string> ConvertSqlServerToCSV(List<KeyValuePair<string, int>> ObjectsNamesAndIds, List<KeyValuePair<string, int>> propertiesNames, List<KeyValuePair<int, KeyValuePair<int, string>>> propertiesValues)
+        {
+            var sortedPropertiesByObjectId = SortSqlServerDataByObjectIdsAndPropertiesNames(ObjectsNamesAndIds, propertiesNames, propertiesValues);
+            var csv = new List<string>();
+
+            var headers = GetSqlServerHeaders(null, sortedPropertiesByObjectId);
+            var validHeader = CreateValidCSVRow(headers);
+            var csvHeader = String.Join(" \" , \" ", validHeader);
+            csv.Add(csvHeader);
+
+            var rows = GetSqlServerRows(sortedPropertiesByObjectId);
+            foreach (var row in rows)
+            {
+                var validRow = CreateValidCSVRow(row);
+                var csvRow = String.Join(" \" , \" ", validRow);
+                csv.Add(csvRow);
+            }        
+
+            return csv;
+        }
+        public string BuildCsvStringFromSQLServer(CSV csv)
+        {
+            var doubleQuote = "\"";
+            var builder = new StringBuilder();
+
+            if (csv.HeadersFromSqlServer != null)
+            {
                 foreach (var header in csv.HeadersFromSqlServer)
                 {
-					headers.AppendLine(header);
+                    builder.AppendLine(header);
                 }
-				builder.Add(headers.ToString());
-			}
+            }
 
-			if (csv.RowsFromSqlServer != null)
-			{
-				var doubleQuote = "\"";
-				foreach (var row in csv.RowsFromSqlServer)
-				{
-					builder.Add(doubleQuote + doubleQuote + row);
-				}				
-			}
+            if (csv.RowsFromSqlServer != null)
+            {
+                foreach (var row in csv.RowsFromSqlServer)
+                {
+                    builder.AppendLine(doubleQuote + doubleQuote + doubleQuote + doubleQuote + row + doubleQuote);
+                }
+            }
 
-			return builder;
-		}
-	}
+            return builder.ToString();
+        }
+        public List<string> BuildMultipleCsvStringsFromSQLServer(CSV csv)
+        {
+            var builder = new List<string>();
+
+            if (csv.HeadersFromSqlServer != null)
+            {
+                var headers = new StringBuilder();
+                foreach (var header in csv.HeadersFromSqlServer)
+                {
+                    headers.AppendLine(header);
+                }
+                builder.Add(headers.ToString());
+            }
+
+            if (csv.RowsFromSqlServer != null)
+            {
+                var doubleQuote = "\"";
+                foreach (var row in csv.RowsFromSqlServer)
+                {
+                    builder.Add(doubleQuote + doubleQuote + row);
+                }
+            }
+
+            return builder;
+        }
+
+    }
 }
