@@ -334,7 +334,6 @@ namespace FileConverter.Services
                 return rows;
             }
         }
-
         public async Task<List<KeyValuePair<string, int>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId)
         {
             var sql = $@"  SELECT [objectId] ,[name] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {classId} AND [name] like 'fut%' ORDER BY [name]";
@@ -381,6 +380,55 @@ namespace FileConverter.Services
                 return rows;
             }
         }
+
+
+        public async Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo)
+        {
+            var sql = $@"SELECT tjanst.[objectId] AS [ObjectId nr.1], related.[objectId] AS [ObjectId nr.2] FROM [UDGAHBAS].[dbo].[Object] tjanst JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON tjanst.objectId = rel.sourceObjectId  JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE tjanst.[name] LIKE 'fut%' AND tjanst.[classId] = {serviceClassIdOne} AND related.[classId] = {serviceClassIdTwo} AND related.[name] LIKE 'fut%' ORDER BY tjanst.[objectId]";
+
+            var rows = new List<KeyValuePair<int, int>>();
+
+            using (SqlConnection connection = new SqlConnection(conString))
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                await connection.OpenAsync();
+
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                int count = 0;
+                while (await reader.ReadAsync())
+                {
+                    var objectIdNumberOne = 0;
+                    var objectIdNumberTwo = 0;
+
+                    var attributeOneType = reader.GetValue(count).GetType();
+                    if (attributeOneType == typeof(int))
+                    {
+                        objectIdNumberOne = reader.GetSqlInt32(count).Value;
+                    }
+                    else
+                    {
+                        objectIdNumberOne = int.Parse(reader.GetSqlString(count).Value);
+                    }
+
+                    var attributeTwoType = reader.GetValue(count + 1).GetType();
+                    if (attributeTwoType == typeof(int))
+                    {
+                        objectIdNumberTwo = reader.GetSqlInt32(count + 1).Value;
+                    }
+                    else
+                    {
+                        objectIdNumberTwo = int.Parse(reader.GetSqlString(count + 1).Value);
+                    }
+
+                    var objectIdNumberOneObjectIdNumberTwo = new KeyValuePair<int, int>(objectIdNumberOne, objectIdNumberTwo);
+                    rows.Add(objectIdNumberOneObjectIdNumberTwo);
+
+                }
+                return rows;
+            }
+        }
+
 
     }
 

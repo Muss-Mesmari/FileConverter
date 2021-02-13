@@ -8,6 +8,7 @@ namespace FileConverter.Services
 {
 	public interface IDatabaseServices
 	{
+		Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo);
 		Task<List<KeyValuePair<string, List<string>>>> GetAllAttributesSortedByTableAsync(string conString, string fileName);
 		Task<List<string>> GetAllTablesAsync(string conString);
 		string GetConfigString(DocumentFileViewModel documentFileViewModel);

@@ -85,47 +85,51 @@ namespace FileConverter.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectId)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo)
         {
             var csv = new CSV();
-            if (tableName == null && objectId > 0)
+            if (tableName == null && objectIdOne > 0)
             {
-                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);
-                tableName = await _databaseServices.GetObjectNameByClassIdAsync(objectId, conString);
+                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
+                tableName = await _databaseServices.GetObjectNameByClassIdAsync(objectIdOne, conString);
             }
-            else if (tableName != null && objectId == 0)
+            else if (tableName != null && objectIdOne == 0)
             {
                 tableName = "ObjectCount";
-                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);
+                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
             }
             else
             {
                 if (tableName == "Download all")
                 {
                     tableName = "ObjectCount";
-                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);
+                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
                     tableName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
                 }
                 else
                 {
-                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectId);
+                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
                     tableName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
                 }
 
             }
 
-            if (true)
-            {
-                var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
-                var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
-                return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
-            }
-            else
-            {
-                var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
-                var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);                
-                return File(fileContents, "application/zip", $"{tableName.Trim()}.zip", true);
-            }
+            var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
+            var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
+            return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
+
+            //if (true)
+            //{
+            //    var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
+            //    var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
+            //    return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
+            //}
+            //else
+            //{
+            //    var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
+            //    var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);                
+            //    return File(fileContents, "application/zip", $"{tableName.Trim()}.zip", true);
+            //}
         }
 
     }

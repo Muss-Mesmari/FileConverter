@@ -8,7 +8,7 @@ namespace FileConverter.Services
 {
     public interface ICSVServices
     {
-        Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectId);
+        Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo);
         CSV ConvertXlsxToCSV(string fileName);
         string BuildCsvStringFromXlsxFile(CSV csv);
         string BuildCsvStringFromSQLServer(CSV csv);

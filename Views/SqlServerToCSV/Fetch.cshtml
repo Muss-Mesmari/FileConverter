@@ -55,10 +55,10 @@
             <div class="mb-3 text-muted">Choose how do you want to download; by table or by type:</div>
             <ul class="nav nav-tabs card-header-tabs">
                 <li class="nav-item">
-                    <a class="nav-link active font-weight-normal" id="download-by-type-btn" onclick="disable()">Downlaod by type(s)</a>
+                    <a class="nav-link active font-weight-normal" id="download-by-type-btn" onclick="ActivateDownloadingByTypeOption()">Downlaod by type</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="download-by-table-btn" onclick="enable()">Downlaod by table(s)</a>
+                    <a class="nav-link" id="download-by-table-btn" onclick="ActivateDownloadingByTableOption()">Downlaod by table</a>
                 </li>
             </ul>
         </div>
@@ -71,13 +71,22 @@
                         var values = Model.ObjectsTypesNames.Select(x => x.Value.ToString()).ToList();
                     }
 
-                    <div class="form-group" id="downloading-type-option" style="display:block">
-                        <label asp-for="ObjectId" class="control-label"></label>
-                        <select asp-for="ObjectId" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
+                    <div class="form-group" id="downloading-type-option-One" style="display:block">
+                        <label asp-for="ObjectIdOne" class="control-label"></label>
+                        <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
                             <option value="">Select a type</option>
                             <option value="">Download all</option>
                         </select>
-                        <span asp-validation-for="ObjectId" class="text-danger"></span>
+                        <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group" id="downloading-type-option-Two" style="display:block">
+                        <label asp-for="ObjectIdTwo" class="control-label"></label>
+                        <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
+                            <option value="">Select a type</option>
+                            <option value="">Download all</option>
+                        </select>
+                        <span asp-validation-for="ObjectIdTwo" class="text-danger"></span>
                     </div>
 
 
