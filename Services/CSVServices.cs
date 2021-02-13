@@ -253,13 +253,13 @@ namespace FileConverter.Services
             }
         }
         private List<List<string>> GetSqlServerRowsString(List<KeyValuePair<int, List<KeyValuePair<string, string>>>> sortedPropertiesByObjectId)
-        {
+        {           
             var rows = new List<List<string>>();
             foreach (var sortedProperties in sortedPropertiesByObjectId)
             {
                 var row = new List<string>();
                 foreach (var value in sortedProperties.Value)
-                {
+                {                    
                     row.Add(value.Value);
                 }
                 rows.Add(row);
@@ -269,7 +269,7 @@ namespace FileConverter.Services
         private List<KeyValuePair<int, List<KeyValuePair<string, string>>>> SortSqlServerDataByObjectIdsAndPropertiesNames(List<KeyValuePair<string, int>> ObjectsNamesAndIds, List<KeyValuePair<string, int>> propertiesNames, List<KeyValuePair<int, KeyValuePair<int, string>>> propertiesValues)
         {
             var propertiesSortedByObjectIdList = new List<KeyValuePair<int, List<KeyValuePair<string, string>>>>();
-
+          
             foreach (var o in ObjectsNamesAndIds)
             {
                 var properties = new List<KeyValuePair<string, string>>();
@@ -295,6 +295,9 @@ namespace FileConverter.Services
                 emptyProperties.AddRange(p1.Except(p2));
                 emptyProperties.AddRange(p2.Except(p1));
 
+                // Add the object name and object id to the properties list
+                properties.Insert(0,new KeyValuePair<string, string>("Object Id", o.Value.ToString()));
+                properties.Insert(1,new KeyValuePair<string, string>("Object Name", o.Key.ToString()));
 
                 // Assign an empty value to the unused properties and add them to the list
                 foreach (var property in emptyProperties)
@@ -302,10 +305,10 @@ namespace FileConverter.Services
                     properties.Add(new KeyValuePair<string, string>(property, string.Empty));
                 }
 
-                // order properties by name
-                var propertiesOrderedByName = properties.OrderBy(p => p.Key).ToList();
+                //// order properties by name
+                //var propertiesOrderedByName = properties.OrderBy(p => p.Key).ToList();
 
-                var propertiesSortedByObjectId = new KeyValuePair<int, List<KeyValuePair<string, string>>>(o.Value, propertiesOrderedByName);
+                var propertiesSortedByObjectId = new KeyValuePair<int, List<KeyValuePair<string, string>>>(o.Value, properties);
                 propertiesSortedByObjectIdList.Add(propertiesSortedByObjectId);
             }
 
@@ -317,9 +320,12 @@ namespace FileConverter.Services
             var csv = new List<string>();
 
             var headers = GetSqlServerHeaders(null, sortedPropertiesByObjectId);
-            var validHeader = CreateValidCSVRowString(headers);
-            var csvHeader = String.Join(" \" , \" ", validHeader);
-            csv.Add(csvHeader);
+            if (headers.Count() != 0)
+            {
+                var validHeader = CreateValidCSVRowString(headers);
+                var csvHeader = String.Join(" \" , \" ", validHeader);
+                csv.Add(csvHeader);
+            }
 
             var rows = GetSqlServerRowsString(sortedPropertiesByObjectId);
             foreach (var row in rows)

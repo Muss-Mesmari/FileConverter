@@ -91,7 +91,7 @@ namespace FileConverter.Controllers
             if (tableName == null && objectIdOne > 0)
             {
                 csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
-                tableName = await _databaseServices.GetObjectNameByClassIdAsync(objectIdOne, conString);
+                tableName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString);
             }
             else if (tableName != null && objectIdOne == 0)
             {

@@ -127,7 +127,7 @@ namespace FileConverter.Services
             }
             return row;
         }
-        public async Task<string> GetObjectNameByClassIdAsync(int classId, string conString)
+        public async Task<string> GetObjectTypeNameByClassIdAsync(int classId, string conString)
         {
             var tableName = string.Empty;
             var tables = await GetAllTablesAsync(conString);
@@ -141,9 +141,6 @@ namespace FileConverter.Services
             }
             return tableName;
         }
-
-
-
         private async Task<List<KeyValuePair<string, int>>> GetPropertiesIdsByClassIdAsync(string conString, int classId)
         {
             var sql = $@"  SELECT [classId] ,[propertyId] FROM [UDGAHBAS].[dbo].[Property_Class] WHERE [classId] = {classId} ORDER BY [propertyId]";
@@ -193,22 +190,29 @@ namespace FileConverter.Services
         public async Task<List<KeyValuePair<string, int>>> GetPropertiesNamesByPropertiesIdsAsync(string conString, int classId)
         {
             var properties = await GetPropertiesIdsByClassIdAsync(conString, classId);
-
-            var sql = $@" SELECT [propertyId], [propertyName] FROM [UDGAHBAS].[dbo].[Property] WHERE ";
-
-            var whereClause = string.Empty;
-            for (int i = 0; i < properties.Count(); i++)
+            var sql = string.Empty;
+            if (properties.Count() != 0)
             {
-                if (i == 0)
+                sql = $@" SELECT [propertyId], [propertyName] FROM [UDGAHBAS].[dbo].[Property] WHERE ";
+
+                var whereClause = string.Empty;
+                for (int i = 0; i < properties.Count(); i++)
                 {
-                    whereClause = $"[propertyId] = {properties[i].Value} ";
-                    sql += whereClause;
+                    if (i == 0)
+                    {
+                        whereClause = $"[propertyId] = {properties[i].Value} ";
+                        sql += whereClause;
+                    }
+                    else
+                    {
+                        whereClause = $"OR [propertyId] = {properties[i].Value} ";
+                        sql += whereClause;
+                    }
                 }
-                else
-                {
-                    whereClause = $"OR [propertyId] = {properties[i].Value} ";
-                    sql += whereClause;
-                }
+            }
+            else
+            {
+                sql = $@" SELECT [propertyId], [propertyName] FROM [UDGAHBAS].[dbo].[Property] WHERE [propertyId] = 0";
             }
 
 
