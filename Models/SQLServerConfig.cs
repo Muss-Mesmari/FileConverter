@@ -20,7 +20,6 @@ namespace FileConverter.Models
         [StringLength(50)]
         public string UserId { get; set; }
 
-        [Required(ErrorMessage = "Please enter your password")]
         [Display(Name = "Password")]
         [DataType(DataType.Password)]
         [StringLength(50)]

@@ -86,7 +86,6 @@
                             <option value="">Select a type</option>
                             <option value="">Download all</option>
                         </select>
-                        <span asp-validation-for="ObjectIdTwo" class="text-danger"></span>
                     </div>
 
 
@@ -97,6 +96,15 @@
                             <option value="Download all">Download all</option>
                         </select>
                         <span asp-validation-for="TableName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox">
+                            <label asp-for="ZipDownloadingFormat">
+                                <input asp-for="ZipDownloadingFormat" />
+                                @Html.DisplayNameFor(d => d.ZipDownloadingFormat)
+                            </label>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -142,9 +150,4 @@
         </div>
     </div>
 }
-
-
-<script>
-
-</script>
 

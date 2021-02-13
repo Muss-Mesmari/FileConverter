@@ -85,7 +85,7 @@ namespace FileConverter.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, bool zipDownloadingFormat)
         {
             var csv = new CSV();
             if (tableName == null && objectIdOne > 0)
@@ -114,22 +114,18 @@ namespace FileConverter.Controllers
 
             }
 
-            var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
-            var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
-            return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
-
-            //if (false)
-            //{
-            //    var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
-            //    var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
-            //    return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
-            //}
-            //else
-            //{
-            //    var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
-            //    var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);
-            //    return File(fileContents, "application/zip", $"{tableName.Trim()}.zip", true);
-            //}
+            if (!zipDownloadingFormat)
+            {
+                var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
+                var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
+                return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
+            }
+            else
+            {
+                var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
+                var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);
+                return File(fileContents, "application/zip", $"{tableName.Trim()}.zip", true);
+            }
         }
 
     }
