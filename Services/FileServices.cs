@@ -84,9 +84,9 @@ namespace FileConverter.Services
                     {
                         name = files[i].Split(",").LastOrDefault();
                     }
-                   
+
                     var newName = string.Empty;
-                    if (name.Contains("\"\""))
+                    if (name.Contains("\""))
                     {
                         newName = name.Replace("\"", "").Trim();
                     }

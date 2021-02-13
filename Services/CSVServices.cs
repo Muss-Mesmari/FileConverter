@@ -380,7 +380,7 @@ namespace FileConverter.Services
         {
             var builder = new List<string>();
 
-            if (csv.HeadersFromSqlServer != null)
+            if (csv.HeadersFromSqlServer.Count() != 0)
             {
                 var headers = new StringBuilder();
                 foreach (var header in csv.HeadersFromSqlServer)
@@ -390,7 +390,7 @@ namespace FileConverter.Services
                 builder.Add(headers.ToString());
             }
 
-            if (csv.RowsFromSqlServer != null)
+            if (csv.RowsFromSqlServer.Count() != 0)
             {
                 var doubleQuote = "\"";
                 foreach (var row in csv.RowsFromSqlServer)

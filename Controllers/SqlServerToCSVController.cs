@@ -118,7 +118,7 @@ namespace FileConverter.Controllers
             var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
             return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
 
-            //if (true)
+            //if (false)
             //{
             //    var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
             //    var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
@@ -127,7 +127,7 @@ namespace FileConverter.Controllers
             //else
             //{
             //    var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
-            //    var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);                
+            //    var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);
             //    return File(fileContents, "application/zip", $"{tableName.Trim()}.zip", true);
             //}
         }
