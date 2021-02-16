@@ -67,6 +67,7 @@ namespace FileConverter.Controllers
             var tables = await _databaseServices.GetAllTablesAsync(conString);
             var numberOfTables = attributesByTable.Count();
             var objectsTypesNames = await _databaseServices.GetAllObjectsTypesNamesAsync(tables, conString);
+            var modelsNames = await _databaseServices.GetModelsNamesAsync(conString);
 
             var sQLServer = new SQLServer
             {
@@ -79,36 +80,37 @@ namespace FileConverter.Controllers
                 AttributesByTable = attributesByTable,
                 SQLServer = sQLServer,
                 SQLServerConfig = sQLServerConfig,
-                ObjectsTypesNames = objectsTypesNames
+                ObjectsTypesNames = objectsTypesNames,
+                ModelsNames = modelsNames
             });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, bool zipDownloadingFormat)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName, bool zipDownloadingFormat)
         {
             var csv = new CSV();
             if (tableName == null && objectIdOne > 0)
             {
-                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
+                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
                 tableName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString);
             }
             else if (tableName != null && objectIdOne == 0)
             {
                 tableName = "ObjectCount";
-                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
+                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
             }
             else
             {
                 if (tableName == "Download all")
                 {
                     tableName = "ObjectCount";
-                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
+                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
                     tableName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
                 }
                 else
                 {
-                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo);
+                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
                     tableName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
                 }
 

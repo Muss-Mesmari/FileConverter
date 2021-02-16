@@ -27,11 +27,15 @@ namespace FileConverter.ViewModels
 		[Display(Name = "Related object type (Optional)")]
 		public int ObjectIdTwo { get; set; }
 
+		[Display(Name = "Desired model (Optional)")]
+		public string ModelName { get; set; }
+
 		[Display(Name = "Check the box if you want the objects to be downloaded in separate CSV files")]
 		public bool ZipDownloadingFormat { get; set; }
 
 		public List<KeyValuePair<string, List<string>>> AttributesByTable { get; set; }
 		public bool IsType { get; set; }
 		public bool IsTable { get; set; }
-	}
+        public List<string> ModelsNames { get; internal set; }
+    }
 }

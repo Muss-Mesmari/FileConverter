@@ -19,7 +19,6 @@ namespace FileConverter.Services
         {
             _documentFileDbContext = documentFileDbContext;
         }
-
         public string GetConfigString(DocumentFileViewModel documentFileViewModel)
         {
             var server = documentFileViewModel.SQLServerConfig.Server;
@@ -215,6 +214,7 @@ namespace FileConverter.Services
                 sql = $@" SELECT [propertyId], [propertyName] FROM [UDGAHBAS].[dbo].[Property] WHERE [propertyId] = 0";
             }
 
+            var test = ExcuteSQLAsync(conString, sql);
 
             var rows = new List<KeyValuePair<string, int>>();
 
@@ -255,32 +255,33 @@ namespace FileConverter.Services
                     rows.Add(new KeyValuePair<string, int>(stringAttributeValue.Trim(), intAttributeValue));
 
                 }
+
+               
                 return rows;
             }
         }
-        public async Task<List<KeyValuePair<int, KeyValuePair<int, string>>>> GetPropertiesValuesByObjectIdsSortedByObjectIdsAsync(string conString, int classId)
-        {
-            var properties = await GetPropertiesIdsByClassIdAsync(conString, classId);
-            var objects = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, classId);
+        public async Task<List<KeyValuePair<int, KeyValuePair<int, string>>>> GetPropertiesValuesByObjectIdsSortedByObjectIdsAsync(string conString, int classId, string modelName)
+        {            
+            var objects = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, classId, modelName);
+            var sql = $@" SELECT [objectId], [propertyId], [value] FROM [UDGAHBAS].[dbo].[PropertyValue] WHERE";
 
-            var sql = $@" SELECT [objectId], [propertyId], [value] FROM [UDGAHBAS].[dbo].[PropertyValue] WHERE ";
-
-            var whereClause = string.Empty;
-            for (int i = 0; i < objects.Count(); i++)
-            {
-                if (i == 0)
+                var whereClause = string.Empty;
+                for (int i = 0; i < objects.Count(); i++)
                 {
-                    whereClause = $"[objectId] = {objects[i].Value} ";
-                    sql += whereClause;
+                    if (i == 0)
+                    {
+                        whereClause = $"[objectId] = {objects[i].Value} ";
+                        sql += whereClause;
+                    }
+                    else
+                    {
+                        whereClause = $"OR [objectId] = {objects[i].Value} ";
+                        sql += whereClause;
+                    }
                 }
-                else
-                {
-                    whereClause = $"OR [objectId] = {objects[i].Value} ";
-                    sql += whereClause;
-                }
-            }
 
-            sql += "ORDER BY [objectId], [propertyId]";
+                sql += "ORDER BY [objectId], [propertyId]";
+         
 
             
             var rows = new List<KeyValuePair<int, KeyValuePair<int, string>>>();
@@ -338,9 +339,9 @@ namespace FileConverter.Services
                 return rows;
             }
         }
-        public async Task<List<KeyValuePair<string, int>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId)
+        public async Task<List<KeyValuePair<string, int>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId, string modelName)
         {
-            var sql = $@"  SELECT [objectId] ,[name] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {classId} AND [name] like 'fut%' ORDER BY [name]";
+            var sql = $@"  SELECT [objectId] ,[name] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {classId} AND [name] like '{modelName}%' ORDER BY [name]";
 
             var rows = new List<KeyValuePair<string, int>>();
 
@@ -384,11 +385,9 @@ namespace FileConverter.Services
                 return rows;
             }
         }
-
-
-        public async Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo)
+        public async Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName)
         {
-            var sql = $@"SELECT tjanst.[objectId] AS [ObjectId nr.1], related.[objectId] AS [ObjectId nr.2] FROM [UDGAHBAS].[dbo].[Object] tjanst JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON tjanst.objectId = rel.sourceObjectId  JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE tjanst.[name] LIKE 'fut%' AND tjanst.[classId] = {serviceClassIdOne} AND related.[classId] = {serviceClassIdTwo} AND related.[name] LIKE 'fut%' ORDER BY tjanst.[objectId]";
+            var sql = $@"SELECT tjanst.[objectId] AS [ObjectId nr.1], related.[objectId] AS [ObjectId nr.2] FROM [UDGAHBAS].[dbo].[Object] tjanst JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON tjanst.objectId = rel.sourceObjectId  JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE tjanst.[name] LIKE '{modelName}%' AND tjanst.[classId] = {serviceClassIdOne} AND related.[classId] = {serviceClassIdTwo} AND related.[name] LIKE '{modelName}%' ORDER BY tjanst.[objectId]";
 
             var rows = new List<KeyValuePair<int, int>>();
 
@@ -429,12 +428,65 @@ namespace FileConverter.Services
                     rows.Add(objectIdNumberOneObjectIdNumberTwo);
 
                 }
+               
                 return rows;
             }
         }
+        public async Task<List<string>> GetModelsNamesAsync(string conString)
+        {
+            var objectsNamesAndIds = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, 576, null);
+
+            var modelsNames = new List<string>();
+            foreach (var o in objectsNamesAndIds)
+            {
+                if (o.Value != 12)
+                {
+                    modelsNames.Add(o.Key.Substring(0,3));
+                }                
+            }
+            return modelsNames;
+
+        }
 
 
+
+
+        private async Task<List<KeyValuePair<int, List<string>>>> ExcuteSQLAsync(string conString, string sql)
+        {
+            var rows = new List<KeyValuePair<int, List<string>>>();
+
+            using (SqlConnection connection = new SqlConnection(conString))
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                await connection.OpenAsync();
+
+                SqlDataReader reader = await command.ExecuteReaderAsync();
+
+                var numberOfColumns = sql.Count(s => (s.ToString() == ",")) + 1;
+                while (await reader.ReadAsync())
+                {
+                    var intValue = new int();
+                    var stringValues = new List<string>();
+                    for (int i = 0; i < numberOfColumns; i++)
+                    {
+                        var valueType = reader.GetValue(i).GetType();
+                        if (valueType == typeof(int))
+                        {
+                            intValue = reader.GetSqlInt32(i).Value;
+                        }
+                        else
+                        {
+                            var stringValue = reader.GetSqlString(i).Value;
+                            stringValues.Add(stringValue);
+                        }                   
+                    }
+
+                    rows.Add(new KeyValuePair<int, List<string>>(intValue, stringValues));
+
+                }
+                return rows;
+            }
+        }
     }
-
 }
 
