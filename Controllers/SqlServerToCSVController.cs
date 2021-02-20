@@ -22,22 +22,17 @@ namespace FileConverter.Controllers
 {
     public class SqlServerToCSVController : Controller
     {
-        private readonly DocumentFileDbContext _context;
         private readonly IDatabaseServices _databaseServices;
-        private readonly IXlsxServices _xlsxServices;
         private readonly ICSVServices _CSVServices;
         private readonly IFileServices _fileServices;
 
         public SqlServerToCSVController
-            (DocumentFileDbContext context,
+            (
             IDatabaseServices databaseServices,
-            IXlsxServices xlsxServices,
             ICSVServices csvServices,
             IFileServices fileServices)
         {
-            _context = context;
             _databaseServices = databaseServices;
-            _xlsxServices = xlsxServices;
             _CSVServices = csvServices;
             _fileServices = fileServices;
         }
@@ -63,16 +58,18 @@ namespace FileConverter.Controllers
                 Database = newDocumentFile.SQLServerConfig.Database
             };
 
-            var attributesByTable = await _databaseServices.GetAllAttributesSortedByTableAsync(conString, null);
+            var attributesByTable = await _databaseServices.GetAllColumnsSortedByTableAsync(conString, null);
             var tables = await _databaseServices.GetAllTablesAsync(conString);
-            var numberOfTables = attributesByTable.Count();
+            var numberOfTables = attributesByTable.Count;
             var objectsTypesNames = await _databaseServices.GetAllObjectsTypesNamesAsync(tables, conString);
             var modelsNames = await _databaseServices.GetModelsNamesAsync(conString);
+            var numberOfColumns = attributesByTable.Count();
 
             var sQLServer = new SQLServer
             {
                 NumberOfTables = numberOfTables,
-                Tables = tables
+                Tables = tables,
+                NumberOfColumns = numberOfColumns
             };
 
             return View(new DocumentFileViewModel
@@ -89,44 +86,20 @@ namespace FileConverter.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName, bool zipDownloadingFormat)
         {
-            var csv = new CSV();
-            if (tableName == null && objectIdOne > 0)
-            {
-                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
-                tableName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString);
-            }
-            else if (tableName != null && objectIdOne == 0)
-            {
-                tableName = "ObjectCount";
-                csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
-            }
-            else
-            {
-                if (tableName == "Download all")
-                {
-                    tableName = "ObjectCount";
-                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
-                    tableName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
-                }
-                else
-                {
-                    csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
-                    tableName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
-                }
+            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
 
-            }
-
+            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelName);
             if (!zipDownloadingFormat)
             {
                 var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
                 var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
-                return File(fileContents, "text/csv", $"{tableName.Trim()}.csv");
+                return File(fileContents, "text/csv", $"{fileName.Trim()}.csv");
             }
             else
             {
                 var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
                 var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);
-                return File(fileContents, "application/zip", $"{tableName.Trim()}.zip", true);
+                return File(fileContents, "application/zip", $"{fileName.Trim()}.zip", true);
             }
         }
 

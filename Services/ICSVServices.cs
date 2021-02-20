@@ -13,5 +13,6 @@ namespace FileConverter.Services
         string BuildCsvStringFromXlsxFile(CSV csv);
         string BuildCsvStringFromSQLServer(CSV csv);
         List<string> BuildMultipleCsvStringsFromSQLServer(CSV csv);
+        CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo);
     }
 }

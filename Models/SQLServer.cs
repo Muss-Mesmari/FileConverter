@@ -9,7 +9,7 @@ namespace FileConverter.Models
 	{
 		public List<string> Tables { get; set; }
 		public int NumberOfTables { get; set; }
-		public List<string> Attributes { get; set; }
+		public int NumberOfColumns { get; set; }
 	}
 }
 

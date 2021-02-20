@@ -11,21 +11,22 @@ using Microsoft.AspNetCore.Http;
 using System.Text;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FileConverter.Services
 {
     public class FileServices : IFileServices
     {
-        private readonly DocumentFileDbContext _documentFileDbContext;
-        private readonly IXlsxServices _xlsxServices;
+        private readonly ICSVServices _CSVServices;
+        private readonly IDatabaseServices _databaseServices;
 
         public FileServices(
-            DocumentFileDbContext documentFileDbContext,
-            IXlsxServices xlsxServices
+             ICSVServices csvServices,
+              IDatabaseServices databaseServices
             )
         {
-            _documentFileDbContext = documentFileDbContext;
-            _xlsxServices = xlsxServices;
+            _CSVServices = csvServices;
+            _databaseServices = databaseServices;
         }
 
 
@@ -44,10 +45,8 @@ namespace FileConverter.Services
                     var filePath = Path.GetTempFileName(); // GetTempFileName(); //we are using Temp file name just for the example. Add your own file path.
                     paths.Add(filePath);
 
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await formFile.CopyToAsync(stream);
-                    }                   
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    await formFile.CopyToAsync(stream);
                 }
             }
             // process uploaded files
@@ -73,9 +72,9 @@ namespace FileConverter.Services
             using var memoryStream = new MemoryStream();
             using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true, Encoding.UTF8))
             {
-                for (int i = 0; i < files.Count(); i++)
+                for (int i = 0; i < files.Count; i++)
                 {
-                    var name = string.Empty; 
+                    var name = string.Empty;
                     if (files[i].ToString().Contains("\""))
                     {
                         name = files[i].Split(",")[1];
@@ -96,15 +95,36 @@ namespace FileConverter.Services
                     }
 
                     var file1 = archive.CreateEntry($"{newName}.csv", CompressionLevel.Optimal);
-                    using (var streamWriter = new StreamWriter(file1.Open(), Encoding.UTF8))
-                    {
-                        streamWriter.Write(files[i]);
-                    }
+                    using var streamWriter = new StreamWriter(file1.Open(), Encoding.UTF8);
+                    streamWriter.Write(files[i]);
                 }
-            }     
+            }
 
             return memoryStream.ToArray();
         }
-
+        public async Task<string> CreateFileNameAsync(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName)
+        {
+            var cSVDownloadingOption = _CSVServices.ChooseCSVDownloadingOptions(tableName, objectIdOne, ObjectIdTwo);
+            if (cSVDownloadingOption == CSVDownloadingOptions.Tables)
+            {
+                var fileName = tableName;
+                return fileName;
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.Objects || cSVDownloadingOption == CSVDownloadingOptions.Relationships)
+            {
+                var fileName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString);
+                return fileName;
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.DownloadAllTables)
+            {
+                var fileName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
+                return fileName;
+            }
+            else
+            {
+                var fileName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
+                return fileName;
+            }            
+        }
     }
 }

@@ -16,20 +16,18 @@ namespace FileConverter.Services
 {
     public class CSVServices : ICSVServices
     {
-        private readonly DocumentFileDbContext _documentFileDbContext;
         private readonly IXlsxServices _xlsxServices;
         private readonly IDatabaseServices _databaseServices;
         public CSVServices(
-            DocumentFileDbContext documentFileDbContext,
             IXlsxServices xlsxServices,
             IDatabaseServices databaseServices
             )
         {
-            _documentFileDbContext = documentFileDbContext;
             _xlsxServices = xlsxServices;
             _databaseServices = databaseServices;
         }
 
+        // Convert Xlsx to CSV
         public CSV ConvertXlsxToCSV(string filePath)
         {
             var excelSheetHeaders = _xlsxServices.GetDataFromXlsxFile(filePath).Headers;
@@ -45,12 +43,12 @@ namespace FileConverter.Services
             };
             return csv;
         }
-        private string ConvertXlsxHeadersToCSV(List<string> excelSheetHeaders)
+        static string ConvertXlsxHeadersToCSV(List<string> excelSheetHeaders)
         {
             var csvHeaders = String.Join(",", excelSheetHeaders);
             return csvHeaders;
         }
-        private List<string> ConvertXlsxRowsToCSV(List<List<string>> excelSheetTable)
+        static List<string> ConvertXlsxRowsToCSV(List<List<string>> excelSheetTable)
         {
             List<string> csvRows = new List<string>();
 
@@ -65,7 +63,7 @@ namespace FileConverter.Services
 
             return csvRows;
         }
-        private List<string> ValidateStrings(List<string> row)
+        static List<string> ValidateStrings(List<string> row)
         {
             List<string> csvRows = new List<string>();
 
@@ -91,56 +89,17 @@ namespace FileConverter.Services
             }
             return csvRows;
         }
-        private List<string> CreateValidCSVRowString(List<string> row)
+        static int CountCsvRows(ExcelSheet excelSheet)
         {
-            List<string> csvRows = new List<string>();
-
-            foreach (var value in row)
-            {
-                if (value.GetType() == typeof(string))
-                {
-                    if (value.Length >= 200)
-                    {
-                        var validValue = string.Empty;
-                        csvRows.Add(validValue);
-                    }
-                    else
-                    {
-                        var validValue = WebUtility.HtmlDecode(Regex.Replace(value, "<[^>]*(>|$)", string.Empty)).Replace("\n", String.Empty).Replace("\"", "\"\"").Replace(" ", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty).Replace("\r\n", string.Empty).Trim();
-                        csvRows.Add(validValue);
-                    }
-                }
-                else
-                {
-                    csvRows.Add(value.Trim());
-                }
-            }
-
-            return csvRows;
-        }
-        private int CreateValidCSVRowInt(int value)
-        {
-            if (value.GetType() == typeof(int))
-            {
-                var validValue = Convert.ToInt32(value);
-                return validValue;
-            }
-            else
-            {
-                return value;
-            }
-        }
-        private int CountCsvRows(ExcelSheet excelSheet)
-        {
-            var numberOfRows = excelSheet.Rows.Count();
+            var numberOfRows = excelSheet.Rows.Count;
             var numberOfHeaders = 1;
             var totalRows = numberOfRows + numberOfHeaders;
 
             return totalRows;
         }
-        private int CountCsvHeaders(ExcelSheet excelSheet)
+        static int CountCsvHeaders(ExcelSheet excelSheet)
         {
-            var numberOfHeaders = excelSheet.Headers.Count();
+            var numberOfHeaders = excelSheet.Headers.Count;
             return numberOfHeaders;
         }
         public string BuildCsvStringFromXlsxFile(CSV csv)
@@ -160,217 +119,312 @@ namespace FileConverter.Services
 
             return builder.ToString();
         }
-
-
+        //---------------------
+       
 
         public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo, string modelName)
         {
-            var sqlServerAttributesByTable = new List<KeyValuePair<string, List<string>>>();
-            var sqlServerRowsString = new List<string>();
-            var sqlServerRowsInt = new List<string>();
+            var rows = new List<string>();
+            var headers = new List<string>();
 
-            if (objectIdTwo != 0)
+            var cSVDownloadingOption = ChooseCSVDownloadingOptions(tableName, objectIdOne, objectIdTwo);
+            if (cSVDownloadingOption == CSVDownloadingOptions.Relationships)
             {
-                var sqlServerRelationsshipsValues = await _databaseServices.GetRelationshipsByClassIdsAsync(conString, objectIdOne, objectIdTwo, modelName);
-                sqlServerRowsInt = ConvertSqlServerToCSVInt(sqlServerRelationsshipsValues);
+                // to retrieve relationsships - ex relationsship between tjänster and vo
+                rows = await ConvertSQLServerRelationshipToCSVAsync(conString, objectIdOne, objectIdTwo, modelName);
             }
-            else
+            else if (cSVDownloadingOption == CSVDownloadingOptions.Objects)
             {
-                if (objectIdOne == 0)
-                {
-                    sqlServerAttributesByTable = await _databaseServices.GetAllAttributesSortedByTableAsync(conString, tableName);
-                }
-                else
-                {
-                    var sqlServerObjects = await _databaseServices.GetObjectsNamesAndObjectIdsByClassIdAsync(conString, objectIdOne, modelName);
-                    var sqlServerPropertiesNames = await _databaseServices.GetPropertiesNamesByPropertiesIdsAsync(conString, objectIdOne);
-                    var sqlServerPropertiesValues = await _databaseServices.GetPropertiesValuesByObjectIdsSortedByObjectIdsAsync(conString, objectIdOne, modelName);
-                    sqlServerRowsString = ConvertSqlServerToCSVString(sqlServerObjects, sqlServerPropertiesNames, sqlServerPropertiesValues);
-                }
+                // to retrieve a specific type of objects - ex tjänster or VO 
+                rows = await ConvertSQLServerObjectsToCSVAsync(conString, objectIdOne, modelName);
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.Tables)
+            {
+                // to retrieve all columns names of a table 
+                headers = await ConvertSQLServerTablesHeadersToCSVAsync(conString, tableName);
+                // retrieving columns values will be implemented in the soon future
             }
 
-
-            var sqlServerHeaders = new List<string>();
-            if (!string.IsNullOrEmpty(tableName))
-            {
-                sqlServerHeaders = MatchSqlServerHeadersByTable(tableName, sqlServerAttributesByTable);
-            }
-            else
-            {
-                sqlServerHeaders = GetSqlServerHeaders(sqlServerAttributesByTable, null);
-            }
-
-            var sqlServerRows = new List<string>();
-            if (sqlServerRowsInt.Count() != 0)
-            {
-                sqlServerRows = sqlServerRowsInt;
-            }
-            else
-            {
-                sqlServerRows = sqlServerRowsString;
-            }
 
             var csv = new CSV
             {
-                HeadersFromSqlServer = sqlServerHeaders,
-                RowsFromSqlServer = sqlServerRows
+                HeadersFromSqlServer = headers,
+                RowsFromSqlServer = rows
             };
             return csv;
         }
-        private List<string> MatchSqlServerHeadersByTable(string tableName, List<KeyValuePair<string, List<string>>> sqlServerAttributesByTable)
+        public CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo)
         {
-            List<string> csvHeaders = new List<string>();
-
-            for (int i = 0; i < sqlServerAttributesByTable.Count(); i++)
+            if (tableName == "Download all tables")
             {
-                if (sqlServerAttributesByTable[i].Key == tableName)
-                {
-                    var header = String.Join(",", sqlServerAttributesByTable[i].Value);
-                    csvHeaders.Add(header);
-                }
-            }
-            return csvHeaders;
-        }
-        private List<string> GetSqlServerHeaders(List<KeyValuePair<string, List<string>>> sqlServerAttributesByTable, List<KeyValuePair<int, List<KeyValuePair<string, string>>>> sortedPropertiesByObjectId)
-        {
-            List<string> csvHeaders = new List<string>();
-            if (sqlServerAttributesByTable != null)
-            {
-                for (int i = 0; i < sqlServerAttributesByTable.Count(); i++)
-                {
-                    var header = String.Join(",", sqlServerAttributesByTable[i].Value);
-                    csvHeaders.Add(header);
-                }
-                return csvHeaders;
+                return CSVDownloadingOptions.DownloadAllTables;
             }
             else
             {
-
-                for (int i = 0; i < sortedPropertiesByObjectId.Count(); i++)
+                if (objectIdTwo != 0)
                 {
-                    if (i == 0)
+                    return CSVDownloadingOptions.Relationships;
+                }
+                else
+                {
+                    if (objectIdOne == 0)
                     {
-                        for (int j = 0; j < sortedPropertiesByObjectId[i].Value.Count(); j++)
-                        {
-                            var header = sortedPropertiesByObjectId[i].Value[j].Key;
-                            csvHeaders.Add(header);
-                        }
+                        return CSVDownloadingOptions.Tables;
+                    }
+                    else
+                    {
+                        return CSVDownloadingOptions.Objects;
                     }
                 }
-
-                return csvHeaders;
             }
+
         }
-        private List<List<string>> GetSqlServerRowsString(List<KeyValuePair<int, List<KeyValuePair<string, string>>>> sortedPropertiesByObjectId)
-        {           
-            var rows = new List<List<string>>();
-            foreach (var sortedProperties in sortedPropertiesByObjectId)
+
+
+        // Relationship between objects
+        private async Task<List<string>> ConvertSQLServerRelationshipToCSVAsync(string conString, int objectIdOne, int objectIdTwo, string modelName)
+        {
+            var relationshipsRows = await CreateCSVRelationshipRowsAsync(conString, objectIdOne, objectIdTwo, modelName);
+            return relationshipsRows;
+        }
+        private async Task<List<string>> CreateCSVRelationshipRowsAsync(string conString, int objectIdOne, int objectIdTwo, string modelName)
+        {
+            // retrieve necessary data from database
+            var relationshipsIdsRows = await _databaseServices.GetRelationshipsByClassIdsAsync(conString, objectIdOne, objectIdTwo, modelName);
+
+            // Convert database data to CSV
+            var rows = new List<string>
             {
-                var row = new List<string>();
-                foreach (var value in sortedProperties.Value.OrderBy(o=>o.Key))
-                {                    
-                    row.Add(value.Value);
+                "ObjectId,RelatedObjectId"  // add the header
+            };
+            foreach (var relationshipIdsRow in relationshipsIdsRows)
+            {
+                var objectId = CreateValidCSVIntValue(relationshipIdsRow.Key);
+                var RelatedObjectId = CreateValidCSVIntValue(relationshipIdsRow.Value);
+                var relationshipName = "related to";
+
+                var row = objectId.ToString().Trim() + "," + RelatedObjectId.ToString().Trim() + "," + relationshipName.Trim();
+                rows.Add(row);
+            }
+            return rows;
+        }
+        //---------------------
+
+        // Rows of objects: values of properties
+        private async Task<List<string>> ConvertSQLServerObjectsToCSVAsync(string conString, int objectIdOne, string modelName)
+        {
+            var objectsRows = await CreateCSVObjectsRowsAsync(conString, objectIdOne, modelName);
+            return objectsRows;
+        }
+        private async Task<List<string>> CreateCSVObjectsRowsAsync(string conString, int classId, string modelName)
+        {
+            // retrieve necessary data from database
+            var propertiesIds = await _databaseServices.GetPropertiesIdsByClassIdAsync(conString, classId);
+            var sortedPropertiesByObjectIds = await _databaseServices.GetPropertiesAsync(conString, classId, modelName);
+
+            // prepare the data to fit CSV converting
+            var propertiesSortedByObjectIds = new List<KeyValuePair<int, List<KeyValuePair<int, string>>>>();
+            for (int i = 0; i < sortedPropertiesByObjectIds.Count; i++)
+            {
+                var mergedPropertiesThatHaveTheSameObjectIds = MergePropertiesThatHaveTheSameObjectIds(sortedPropertiesByObjectIds, i);
+                var addedMissingPropertiesForEveryObjectId = AddMissingPropertiesForEveryObjectId(mergedPropertiesThatHaveTheSameObjectIds, propertiesIds);
+                var propertiesWithoutDuplicates = RemoveDuplicatedProperties(addedMissingPropertiesForEveryObjectId, propertiesIds);
+                var orderedPropertiesById = OrderPropertiesById(propertiesWithoutDuplicates);
+
+                var propertiesSortedByObjectId = new KeyValuePair<int, List<KeyValuePair<int, string>>>(sortedPropertiesByObjectIds[i].Key, orderedPropertiesById);
+                propertiesSortedByObjectIds.Add(propertiesSortedByObjectId);
+            }
+
+            // Add headers in the top of the list
+            var propertiesSortedByObjectIdsWithHeader = await AddPropertiesNamesASHeaderAsync(conString, classId, propertiesSortedByObjectIds);
+
+            // Convert database data to CSV
+            var rows = AddCommasBetweenValues(propertiesSortedByObjectIdsWithHeader);
+            return rows;
+        }
+        static List<KeyValuePair<int, string>> MergePropertiesThatHaveTheSameObjectIds(List<KeyValuePair<int, List<string>>> sortedPropertiesByObjectIds, int i)
+        {
+            var properties = new List<KeyValuePair<int, string>>();
+            for (int j = 0; j < sortedPropertiesByObjectIds.Count; j++)
+            {
+                var _objectIdOne = sortedPropertiesByObjectIds[i].Key;
+                var _objectIdTwo = sortedPropertiesByObjectIds[j].Key;
+                if (_objectIdOne == _objectIdTwo)
+                {
+                    var propertyId = sortedPropertiesByObjectIds[j].Value[0];
+                    var propertyValue = sortedPropertiesByObjectIds[j].Value[2];
+
+                    var property = new KeyValuePair<int, string>(int.Parse(propertyId), propertyValue);
+                    properties.Add(property);
+                }
+            }
+
+            return properties;
+        }
+        static List<KeyValuePair<int, string>> AddMissingPropertiesForEveryObjectId(List<KeyValuePair<int, string>> properties, List<KeyValuePair<int, string>> propertiesIds)
+        {
+            int numberOfUsedProperties = properties.Count;
+            for (int j = 0; j < numberOfUsedProperties; j++)
+            {
+                foreach (var propertyId in propertiesIds)
+                {
+                    if (int.Parse(propertyId.Value) != properties[j].Key)
+                    {
+                        var propertyName = string.Empty;
+                        var unusedPoperties = new KeyValuePair<int, string>(int.Parse(propertyId.Value), propertyName);
+                        properties.Insert(j, unusedPoperties);
+                    }
+                }
+            }
+            return properties;
+        }
+        static List<KeyValuePair<int, string>> RemoveDuplicatedProperties(List<KeyValuePair<int, string>> properties, List<KeyValuePair<int, string>> propertiesIds)
+        {
+            foreach (var propertyId in propertiesIds)
+            {
+                var doblicatedproperties = properties.Where(p => p.Key == int.Parse(propertyId.Value)).ToList();
+                if (doblicatedproperties.Count >= 2)
+                {
+                    for (int j = 1; j < doblicatedproperties.Count; j++)
+                    {
+                        var propertyName = string.Empty;
+                        var unusedPoperties = new KeyValuePair<int, string>(int.Parse(propertyId.Value), propertyName);
+                        properties.Remove(unusedPoperties);
+                    }
+                }
+            }
+            return properties;
+        }
+        private async Task<List<KeyValuePair<int, List<KeyValuePair<int, string>>>>> AddPropertiesNamesASHeaderAsync(string conString, int classId, List<KeyValuePair<int, List<KeyValuePair<int, string>>>> propertiesSortedByObjectIds)
+        {
+            var propertiesNames = await _databaseServices.GetPropertiesNamesByPropertiesIdsAsync(conString, classId);
+
+            var propertiesNamesAndTheirIds = new List<KeyValuePair<int, string>>();
+            for (int i = 0; i < propertiesNames.Count; i++)
+            {
+                var propertyName = propertiesNames[i].Value[0];
+                var propertyNameAndItsId = new KeyValuePair<int, string>(propertiesNames[i].Key, propertyName);
+                propertiesNamesAndTheirIds.Add(propertyNameAndItsId);
+            }
+            var orderedPropertiesById = OrderPropertiesById(propertiesNamesAndTheirIds);
+            var header = new KeyValuePair<int, List<KeyValuePair<int, string>>>(0, orderedPropertiesById);
+            propertiesSortedByObjectIds.Insert(0, header);
+
+            return propertiesSortedByObjectIds;
+        }
+        static List<KeyValuePair<int, string>> OrderPropertiesById(List<KeyValuePair<int, string>> properties)
+        {
+            var orderedPropertiesById = properties.OrderBy(id => id.Key).ToList();
+            return orderedPropertiesById;
+        }
+        static List<string> AddCommasBetweenValues(List<KeyValuePair<int, List<KeyValuePair<int, string>>>> propertiesSortedByObjectIds)
+        {
+            var rows = new List<string>();
+            foreach (var propertiesSortedByObjectId in propertiesSortedByObjectIds)
+            {
+                var row = string.Empty;
+                for (int i = 0; i < propertiesSortedByObjectId.Value.Count; i++)
+                {
+                    if (i != propertiesSortedByObjectId.Value.Count)
+                    {
+                        var value = CreateValidCSVValue(propertiesSortedByObjectId.Value[i].Value);
+                        row += value + ",";
+                    }
+                    else
+                    {
+                        var value = CreateValidCSVValue(propertiesSortedByObjectId.Value[i].Value);
+                        row += value;
+                    }
                 }
                 rows.Add(row);
             }
             return rows;
         }
-        private List<KeyValuePair<int, List<KeyValuePair<string, string>>>> SortSqlServerDataByObjectIdsAndPropertiesNames(List<KeyValuePair<string, int>> ObjectsNamesAndIds, List<KeyValuePair<string, int>> propertiesNames, List<KeyValuePair<int, KeyValuePair<int, string>>> propertiesValues)
+        //---------------------
+
+        // columns of objects: names of properties
+        private async Task<List<string>> ConvertSQLServerTablesHeadersToCSVAsync(string conString, string tableName)
         {
-            var propertiesSortedByObjectIdList = new List<KeyValuePair<int, List<KeyValuePair<string, string>>>>();
-          
-            foreach (var o in ObjectsNamesAndIds)
+            var columnsNamesSortedByTable = await _databaseServices.GetAllColumnsSortedByTableAsync(conString, tableName);
+            // Convert to CSV headers of a table
+            if (!string.IsNullOrEmpty(tableName))
             {
-                var properties = new List<KeyValuePair<string, string>>();
-                foreach (var propertyName in propertiesNames)
+                var headers = GreateCSVHeaderForOneTable(tableName, columnsNamesSortedByTable);
+                return headers;
+            }
+            else
+            {
+                var headers = CreateCSVHeadersForAllTheTables(columnsNamesSortedByTable);
+                return headers;
+            }           
+        }
+        static List<string> GreateCSVHeaderForOneTable(string tableName, List<KeyValuePair<string, List<string>>> columnsNamesSortedByTable)
+        {
+            List<string> headers = new List<string>();
+
+            for (int i = 0; i < columnsNamesSortedByTable.Count; i++)
+            {
+                if (columnsNamesSortedByTable[i].Key == tableName)
                 {
-                    foreach (var propertyValue in propertiesValues)
-                    {
-                        if (o.Value == propertyValue.Key) // if the objectId == propertyId of the property keyValuePair
-                        {
-                            if (propertyName.Value == propertyValue.Value.Key)
-                            {
-                                if (propertyName.Key == "Object Id" || propertyName.Key == "Object Name")
-                                {
-                                    properties.Add(new KeyValuePair<string, string>(propertyName.Key, propertyValue.Value.Value));
-                                }
-                            }
-                        }
-                    }
+                    var header = String.Join(",", columnsNamesSortedByTable[i].Value);
+                    headers.Add(header);
                 }
+            }
+            return headers;
+        }
+        static List<string> CreateCSVHeadersForAllTheTables(List<KeyValuePair<string, List<string>>> columnsNamesSortedByTable)
+        {
+            List<string> headers = new List<string>();
+            for (int i = 0; i < columnsNamesSortedByTable.Count; i++)
+            {
+                var header = String.Join(",", columnsNamesSortedByTable[i].Value);
+                headers.Add(header);
+            }
+            return headers;
+        }
+        //---------------------
 
-                // Get the unused properties names
-               var p1 = propertiesNames.Where(s1=>s1.Key == "Object Id" || s1.Key == "Object Name").Select(s1 => s1.Key).ToList();
-               // var p1 = propertiesNames.Select(s1 => s1.Key).ToList();
-                var p2 = properties.Select(s2 => s2.Key).ToList();
-                var emptyProperties = new List<string>();
-                emptyProperties.AddRange(p1.Except(p2));
-                emptyProperties.AddRange(p2.Except(p1));
-
-                // Add the object name and object id to the properties list
-                properties.Insert(0,new KeyValuePair<string, string>("Object Id", o.Value.ToString()));
-                properties.Insert(1,new KeyValuePair<string, string>("Object Name", o.Key.ToString()));
-
-                // Assign an empty value to the unused properties and add them to the list
-                foreach (var property in emptyProperties)
+        // validation of rows and headers
+        static string CreateValidCSVValue(string value)
+        {
+            if (value.GetType() == typeof(string))
+            {
+                if (value.Length >= 200) // temprory to skip downloading long texts
                 {
-                    properties.Add(new KeyValuePair<string, string>(property, "--"));
+                    var validValue = string.Empty;
+                    value = validValue;
                 }
-
-                // order properties by name
-                var propertiesOrderedByName = properties.OrderBy(p => p.Key).ToList();
-
-                var propertiesSortedByObjectId = new KeyValuePair<int, List<KeyValuePair<string, string>>>(o.Value, propertiesOrderedByName);
-                propertiesSortedByObjectIdList.Add(propertiesSortedByObjectId);
+                else
+                {
+                    var validValue = WebUtility.HtmlDecode(Regex.Replace(value, "<[^>]*(>|$)", string.Empty)).Replace("\n", String.Empty).Replace("\"", "\"\"").Replace(" ", string.Empty).Replace("\r", string.Empty).Replace("\t", string.Empty).Replace("\r\n", string.Empty).Trim();
+                    value = validValue;
+                }
+            }
+            else
+            {
+                var validValue = value.Trim();
+                value = validValue;
             }
 
-            return propertiesSortedByObjectIdList;
+            return value;
         }
-        private List<string> ConvertSqlServerToCSVString(List<KeyValuePair<string, int>> ObjectsNamesAndIds, List<KeyValuePair<string, int>> propertiesNames, List<KeyValuePair<int, KeyValuePair<int, string>>> propertiesValues)
+        static int CreateValidCSVIntValue(int value)
         {
-            var sortedPropertiesByObjectId = SortSqlServerDataByObjectIdsAndPropertiesNames(ObjectsNamesAndIds, propertiesNames, propertiesValues);
-
-            var csv = new List<string>();
-            var headers = GetSqlServerHeaders(null, sortedPropertiesByObjectId);
-            if (headers.Count() != 0)
+            if (value.GetType() == typeof(int))
             {
-                var validHeader = CreateValidCSVRowString(headers);
-                var csvHeader = String.Join(",", validHeader);
-                //var csvHeader = String.Join("\",\"", validHeader);
-                csv.Add(csvHeader);
+                var validValue = Convert.ToInt32(value);
+                return validValue;
             }
-
-            var rows = GetSqlServerRowsString(sortedPropertiesByObjectId);
-            foreach (var row in rows)
+            else
             {
-                var validRow = CreateValidCSVRowString(row);
-                var csvRow = String.Join(",", validRow);
-                //var csvRow = String.Join("\",\"", validRow);
-                csv.Add(csvRow);
+                return value;
             }
-
-            return csv;
         }
-        private List<string> ConvertSqlServerToCSVInt(List<KeyValuePair<int, int>> relationshipsValues)
-        {
-            var rows = new List<string>();
-            rows.Add("ObjectId,RelatedObjectId");
-            foreach (var relationship in relationshipsValues)
-            {
-                var row = string.Empty;
-                var objectIdOne = CreateValidCSVRowInt(relationship.Key);
-                var objectIdTwo = CreateValidCSVRowInt(relationship.Value);
-                var value = objectIdOne.ToString().Trim() + "," + objectIdTwo.ToString().Trim() + ",ingar_i";
-                row += value.Trim();
+        //---------------------
 
-                rows.Add(row.Trim());
-            }
-        //    var validRow = CreateValidCSVRowString(rows);
-            return rows;
-        }
+        // Build string for csv exporting
         public string BuildCsvStringFromSQLServer(CSV csv)
         {
-           // var doubleQuote = "\"";
             var builder = new StringBuilder();
 
             if (csv.HeadersFromSqlServer != null)
@@ -386,7 +440,6 @@ namespace FileConverter.Services
                 foreach (var row in csv.RowsFromSqlServer)
                 {
                     builder.AppendLine(row);
-                    //builder.AppendLine(doubleQuote + doubleQuote + doubleQuote + doubleQuote + row + doubleQuote);
                 }
             }
 
@@ -396,7 +449,7 @@ namespace FileConverter.Services
         {
             var builder = new List<string>();
 
-            if (csv.HeadersFromSqlServer.Count() != 0)
+            if (csv.HeadersFromSqlServer.Count != 0)
             {
                 var headers = new StringBuilder();
                 foreach (var header in csv.HeadersFromSqlServer)
@@ -406,7 +459,7 @@ namespace FileConverter.Services
                 builder.Add(headers.ToString());
             }
 
-            if (csv.RowsFromSqlServer.Count() != 0)
+            if (csv.RowsFromSqlServer.Count != 0)
             {
                 var doubleQuote = "\"";
                 foreach (var row in csv.RowsFromSqlServer)
@@ -417,6 +470,6 @@ namespace FileConverter.Services
 
             return builder;
         }
-
+        //---------------------
     }
 }

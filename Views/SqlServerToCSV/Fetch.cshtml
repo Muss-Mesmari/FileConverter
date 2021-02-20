@@ -73,9 +73,9 @@
 
                     <div class="form-group" id="downloading-type-option-One" style="display:block">
                         <label asp-for="ObjectIdOne" class="control-label"></label>
-                        <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
+                        <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
                             <option value="">Select a type</option>
-                            <option value="">Download all</option>
+                            <option value="Download all">Download all</option>
                         </select>
                         <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
                     </div>
@@ -83,7 +83,7 @@
 
                     <div class="form-group" id="downloading-type-option-Three" style="display:block">
                         <label asp-for="ModelName" class="control-label"></label>
-                        <select asp-for="ModelName" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,values))">
+                        <select asp-for="ModelName" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
                             <option value="">Select a type</option>
                             <option value="">Download all</option>
                         </select>
@@ -91,9 +91,9 @@
               
                     <div class="form-group" id="downloading-type-option-Two" style="display:block">
                         <label asp-for="ObjectIdTwo" class="control-label"></label>
-                        <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Value", "Key"))">
+                        <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
                             <option value="">Select a type</option>
-                            <option value="">Download all</option>
+                            <option value="Download all">Download all</option>
                         </select>
                     </div>
 
@@ -101,7 +101,7 @@
                         <label asp-for="TableName" class="control-label labels"></label>
                         <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.SQLServer.Tables))">
                             <option value="">Select a table</option>
-                            <option value="Download all">Download all</option>
+                            <option value="Download all tables">Download all</option>
                         </select>
                         <span asp-validation-for="TableName" class="text-danger"></span>
                     </div>
@@ -129,7 +129,7 @@
 
     <div class="accordion" id="accordionExample">
         <div class="card">
-            @for (int i = 0; i < @Model.AttributesByTable.Count(); i++)
+            @for (int i = 0; i < @Model.SQLServer.NumberOfColumns; i++)
             {
                 <div class="card-header" id="heading-@i">
                     <h2 class="mb-0">
@@ -137,7 +137,7 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     @Model.AttributesByTable[i].Key
-                                    <span class="badge badge-warning ml-3">@Model.AttributesByTable[i].Value.Count() attributes</span>
+                                    <span class="badge badge-warning ml-3">@Model.AttributesByTable[i].Value.Count() Columns</span>
                                 </div>
                                 <div><i class="fas fa-chevron-down text-dark"></i></div>
                             </div>

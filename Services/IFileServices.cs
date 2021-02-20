@@ -11,5 +11,6 @@ namespace FileConverter.Services
         Byte[] GetZipFileContents(List<string> files);
         Byte[] GetFileContents(string file);
         Task<Files> UploadAsync(List<IFormFile> file);
+        Task<string> CreateFileNameAsync(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName);
     }
 }

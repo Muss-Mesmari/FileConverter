@@ -13,12 +13,11 @@ namespace FileConverter.Services
 {
     public class DatabaseServices : IDatabaseServices
     {
-        private readonly DocumentFileDbContext _documentFileDbContext;
-
-        public DatabaseServices(DocumentFileDbContext documentFileDbContext)
+        public DatabaseServices()
         {
-            _documentFileDbContext = documentFileDbContext;
         }
+
+        // Handles connection to the server and the database
         public string GetConfigString(DocumentFileViewModel documentFileViewModel)
         {
             var server = documentFileViewModel.SQLServerConfig.Server;
@@ -29,94 +28,87 @@ namespace FileConverter.Services
             var conString = $"Server={server};Database={database};User Id={userId};password={password};Trusted_Connection=True;MultipleActiveResultSets=true";
             return conString;
         }
-        public async Task<List<KeyValuePair<string, List<string>>>> GetAllAttributesSortedByTableAsync(string conString, string tableName)
-        {
-            var allAttributesByTable = new List<KeyValuePair<string, List<string>>>();
+        //---------------------
 
-            var tables = new List<string>();
+
+        // Retrieve models names
+        public async Task<List<string>> GetModelsNamesAsync(string conString)
+        {
+            var voId = 576;
+            var objectsNamesAndIds = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, voId, null);
+
+            var modelsNames = new List<string>();
+            foreach (var o in objectsNamesAndIds)
+            {
+                if (o.Key != 12)
+                {
+                    modelsNames.Add(o.Value.Substring(0, 3));
+                }
+            }
+            return modelsNames;
+        }
+        //---------------------
+
+
+        // Retrieve tables and columns
+        public async Task<List<KeyValuePair<string, List<string>>>> GetAllColumnsSortedByTableAsync(string conString, string tableName)
+        {
+            var allColumnsByTable = new List<KeyValuePair<string, List<string>>>();
+
             if (!string.IsNullOrEmpty(tableName))
             {
-                var attributes = await GetAttributesByTableNameAsync(conString, tableName);
-                allAttributesByTable.Insert(0, new KeyValuePair<string, List<string>>(tableName, attributes));
+                var attributes = await GetColumnsByTableNameAsync(conString, tableName);
+                allColumnsByTable.Insert(0, new KeyValuePair<string, List<string>>(tableName, attributes));
             }
             else
             {
-                tables = await GetAllTablesAsync(conString);
+                var tables = await GetAllTablesAsync(conString);
 
-                for (int i = 0; i < tables.Count(); i++)
+                for (int i = 0; i < tables.Count; i++)
                 {
-                    var attributes = await GetAttributesByTableNameAsync(conString, tables[i]);
-                    allAttributesByTable.Add(new KeyValuePair<string, List<string>>(tables[i], attributes));
+                    var attributes = await GetColumnsByTableNameAsync(conString, tables[i]);
+                    allColumnsByTable.Add(new KeyValuePair<string, List<string>>(tables[i], attributes));
                 }
             }
 
-            return allAttributesByTable;
+            return allColumnsByTable;
         }
         public async Task<List<string>> GetAllTablesAsync(string conString)
         {
-            using (SqlConnection connection = new SqlConnection(conString))
+            using SqlConnection connection = new SqlConnection(conString);
+            await connection.OpenAsync();
+
+            DataTable schema = await connection.GetSchemaAsync("Tables");
+            List<string> TableNames = new List<string>();
+
+            foreach (DataRow row in schema.Rows)
             {
-                await connection.OpenAsync();
-
-                DataTable schema = await connection.GetSchemaAsync("Tables");
-                List<string> TableNames = new List<string>();
-
-                foreach (DataRow row in schema.Rows)
-                {
-                    TableNames.Add(row[2].ToString());
-                }
-                return TableNames;
+                TableNames.Add(row[2].ToString());
             }
+            return TableNames;
         }
-        private async Task<List<string>> GetAttributesByTableNameAsync(string conString, string table)
+        static async Task<List<string>> GetColumnsByTableNameAsync(string conString, string table)
         {
+            table = "ObjectCount";
             var sql = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'{table}'";
-
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
+            var resultSet = await ExcuteSQLAsync(conString, sql);
+            var columns = new List<string>();
+            foreach (var row in resultSet)
             {
-                await connection.OpenAsync();
-
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                var attributeTypes = new List<string>();
-                var attributeValues = new List<string>();
-
-                while (await reader.ReadAsync())
+                foreach (var value in row.Value)
                 {
-                    var attributeValue = reader.GetSqlString(0).Value;
-                    attributeValues.Add(attributeValue);
+                    columns.Add(value);
                 }
-                return attributeValues;
             }
+            return columns;
         }
-        private async Task<List<KeyValuePair<string, int>>> GetObjectsTypesByTableNameAsync(string conString, string table)
+        //---------------------
+
+
+        // Retrieve types of objects
+        public async Task<List<KeyValuePair<int, string>>> GetAllObjectsTypesNamesAsync(List<string> tables, string conString)
         {
-            var sql = $@"SELECT DISTINCT [className], [classId] FROM [UDGAHBAS].[dbo].[{table}] ORDER BY [className] ";
-
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
-            {
-                await connection.OpenAsync();
-
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                var attributeTypes = new List<string>();
-                var attributeValues = new List<KeyValuePair<string, int>>();
-
-                while (await reader.ReadAsync())
-                {
-                    var attributeValueOne = reader.GetSqlString(0).Value;
-                    var attributeValueTwo = reader.GetSqlInt32(1).Value;
-                    var attributeKeyValuePairValues = new KeyValuePair<string, int>(attributeValueOne, attributeValueTwo);
-                    attributeValues.Add(attributeKeyValuePairValues);
-                }
-                return attributeValues;
-            }
-        }
-        public async Task<List<KeyValuePair<string, int>>> GetAllObjectsTypesNamesAsync(List<string> tables, string conString)
-        {
-            List<KeyValuePair<string, int>> row = new List<KeyValuePair<string, int>>();
+            var row = new List<KeyValuePair<int, string>>();
             foreach (var table in tables)
             {
                 if (table == "ObjectCount")
@@ -126,85 +118,86 @@ namespace FileConverter.Services
             }
             return row;
         }
+        static async Task<List<KeyValuePair<int, string>>> GetObjectsTypesByTableNameAsync(string conString, string table)
+        {
+            var sql = $@"SELECT DISTINCT [className], [classId] FROM [UDGAHBAS].[dbo].[{table}] ORDER BY [className] ";
+            var objectsTypes = new List<KeyValuePair<int, string>>();
+
+            var resultSet = await ExcuteSQLAsync(conString, sql);
+            foreach (var row in resultSet)
+            {
+                foreach (var value in row.Value)
+                {
+                    var intValue = row.Key;
+                    var stringValue = value;
+                    var values = new KeyValuePair<int, string>(intValue, stringValue);
+                    objectsTypes.Add(values);
+                }
+            }
+            return objectsTypes;
+        }
+
         public async Task<string> GetObjectTypeNameByClassIdAsync(int classId, string conString)
         {
             var tableName = string.Empty;
+
             var tables = await GetAllTablesAsync(conString);
-            var objectsNamesAndIds = await GetAllObjectsTypesNamesAsync(tables, conString);
-            foreach (var o in objectsNamesAndIds)
+            var objectsTypesName = await GetAllObjectsTypesNamesAsync(tables, conString);
+
+            foreach (var o in objectsTypesName)
             {
-                if (o.Value == classId)
+                if (o.Key == classId)
                 {
-                    tableName = o.Key;
+                    tableName = o.Value;
                 }
             }
             return tableName;
         }
-        private async Task<List<KeyValuePair<string, int>>> GetPropertiesIdsByClassIdAsync(string conString, int classId)
+        //---------------------
+
+
+        // Retrieve properties of objects
+        public async Task<List<KeyValuePair<int, List<string>>>> GetPropertiesAsync(string conString, int classId, string modelName)
         {
-            var sql = $@"  SELECT [classId] ,[propertyId] FROM [UDGAHBAS].[dbo].[Property_Class] WHERE [classId] = {classId} ORDER BY [propertyId]";
+            var sql = $@"SELECT [objectId], property.[propertyId], property.[propertyName], PropertyValue.[value] FROM [UDGAHBAS].[dbo].[Property] property JOIN [UDGAHBAS].[dbo].[PropertyValue] PropertyValue on PropertyValue.propertyId = property.propertyId WHERE ";
 
-            var rows = new List<KeyValuePair<string, int>>();
-
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
+            var objects = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, classId, modelName);
+            for (int i = 0; i < objects.Count; i++)
             {
-                await connection.OpenAsync();
-
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                int count = 0;
-                while (await reader.ReadAsync())
+                if (i == 0)
                 {
-                    var intAttributeValue = 0;
-                    var stringAttributeValue = string.Empty;
-
-                    var attributeOneType = reader.GetValue(count).GetType();
-                    if (attributeOneType == typeof(int))
-                    {
-                        intAttributeValue = reader.GetSqlInt32(count).Value;
-                    }
-                    else
-                    {
-                        stringAttributeValue = reader.GetSqlString(count).Value;
-                    }
-
-
-                    var attributeTwoType = reader.GetValue(count + 1).GetType();
-                    if (attributeTwoType == typeof(string))
-                    {
-                        stringAttributeValue = reader.GetSqlString(count + 1).Value;
-                    }
-                    else
-                    {
-                        intAttributeValue = reader.GetSqlInt32(count + 1).Value;
-                    }
-
-                    rows.Add(new KeyValuePair<string, int>(classId.ToString(), intAttributeValue));
-
+                    var whereClause = $"[objectId] = {objects[i].Key} ";
+                    sql += whereClause;
                 }
-                return rows;
+                else
+                {
+                    var whereClause = $" OR [objectId] = {objects[i].Key} ";
+                    sql += whereClause;
+                }
             }
+            sql += " ORDER BY [objectId], property.[propertyId]";
+            var properties = await ExcuteSQLAsync(conString, sql);
+            return properties;
         }
-        public async Task<List<KeyValuePair<string, int>>> GetPropertiesNamesByPropertiesIdsAsync(string conString, int classId)
+
+        public async Task<List<KeyValuePair<int, List<string>>>> GetPropertiesNamesByPropertiesIdsAsync(string conString, int classId)
         {
-            var properties = await GetPropertiesIdsByClassIdAsync(conString, classId);
+            var propertiesIds = await GetPropertiesIdsByClassIdAsync(conString, classId);
             var sql = string.Empty;
-            if (properties.Count() != 0)
+            if (propertiesIds.Count != 0)
             {
                 sql = $@" SELECT [propertyId], [propertyName] FROM [UDGAHBAS].[dbo].[Property] WHERE ";
 
-                var whereClause = string.Empty;
-                for (int i = 0; i < properties.Count(); i++)
+                for (int i = 0; i < propertiesIds.Count; i++)
                 {
                     if (i == 0)
                     {
-                        whereClause = $"[propertyId] = {properties[i].Value} ";
+                        var whereClause = $"[propertyId] = {propertiesIds[i].Value} ";
                         sql += whereClause;
                     }
                     else
                     {
-                        whereClause = $"OR [propertyId] = {properties[i].Value} ";
+                        var whereClause = $"OR [propertyId] = {propertiesIds[i].Value} ";
                         sql += whereClause;
                     }
                 }
@@ -214,279 +207,140 @@ namespace FileConverter.Services
                 sql = $@" SELECT [propertyId], [propertyName] FROM [UDGAHBAS].[dbo].[Property] WHERE [propertyId] = 0";
             }
 
-            var test = ExcuteSQLAsync(conString, sql);
-
-            var rows = new List<KeyValuePair<string, int>>();
-
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
-            {
-                await connection.OpenAsync();
-
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                int count = 0;
-                while (await reader.ReadAsync())
-                {
-                    var intAttributeValue = 0;
-                    var stringAttributeValue = string.Empty;
-
-                    var attributeOneType = reader.GetValue(count).GetType();
-                    if (attributeOneType == typeof(int))
-                    {
-                        intAttributeValue = reader.GetSqlInt32(count).Value;
-                    }
-                    else
-                    {
-                        stringAttributeValue = reader.GetSqlString(count).Value;
-                    }
-
-
-                    var attributeTwoType = reader.GetValue(count + 1).GetType();
-                    if (attributeTwoType == typeof(string))
-                    {
-                        stringAttributeValue = reader.GetSqlString(count + 1).Value;
-                    }
-                    else
-                    {
-                        intAttributeValue = reader.GetSqlInt32(count + 1).Value;
-                    }
-
-                    rows.Add(new KeyValuePair<string, int>(stringAttributeValue.Trim(), intAttributeValue));
-
-                }
-
-               
-                return rows;
-            }
+            var properties = await ExcuteSQLAsync(conString, sql);
+            return properties;
         }
-        public async Task<List<KeyValuePair<int, KeyValuePair<int, string>>>> GetPropertiesValuesByObjectIdsSortedByObjectIdsAsync(string conString, int classId, string modelName)
-        {            
+        public async Task<List<KeyValuePair<int, string>>> GetPropertiesIdsByClassIdAsync(string conString, int classId)
+        {
+            var sql = $@"  SELECT [classId] ,[propertyId] FROM [UDGAHBAS].[dbo].[Property_Class] WHERE [classId] = {classId} ORDER BY [propertyId]";
+
+            var propertiesIds = new List<KeyValuePair<int, string>>();
+
+            var resultSet = await ExcuteSQLAsync(conString, sql);
+            foreach (var row in resultSet)
+            {
+                var intValue = row.Key;
+                var stringValue = row.Value[0];
+                var values = new KeyValuePair<int, string>(intValue, stringValue);
+                propertiesIds.Add(values);
+            }
+            return propertiesIds;
+        }
+
+        public async Task<List<KeyValuePair<int, List<string>>>> GetPropertiesValuesByObjectIdsSortedByObjectIdsAsync(string conString, int classId, string modelName)
+        {
             var objects = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, classId, modelName);
-            var sql = $@" SELECT [objectId], [propertyId], [value] FROM [UDGAHBAS].[dbo].[PropertyValue] WHERE";
-
-                var whereClause = string.Empty;
-                for (int i = 0; i < objects.Count(); i++)
-                {
-                    if (i == 0)
-                    {
-                        whereClause = $"[objectId] = {objects[i].Value} ";
-                        sql += whereClause;
-                    }
-                    else
-                    {
-                        whereClause = $"OR [objectId] = {objects[i].Value} ";
-                        sql += whereClause;
-                    }
-                }
-
-                sql += "ORDER BY [objectId], [propertyId]";
-         
-
-            
-            var rows = new List<KeyValuePair<int, KeyValuePair<int, string>>>();
-
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
+            var sql = $@" SELECT [objectId], [propertyId], [value] FROM [UDGAHBAS].[dbo].[PropertyValue] WHERE ";
+            for (int i = 0; i < objects.Count; i++)
             {
-                await connection.OpenAsync();
-
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                int count = 0;
-                while (await reader.ReadAsync())
+                if (i == 0)
                 {
-                    var objectId = 0;
-                    var propertyId = 0;
-                    var value = string.Empty;
-
-                    var attributeOneType = reader.GetValue(count).GetType();
-                    if (attributeOneType == typeof(int))
-                    {
-                        objectId = reader.GetSqlInt32(count).Value;
-                    }
-                    else
-                    {
-                        objectId = int.Parse(reader.GetSqlString(count).Value);
-                    }
-
-                    var attributeTwoType = reader.GetValue(count + 1).GetType();
-                    if (attributeTwoType == typeof(int))
-                    {
-                        propertyId = reader.GetSqlInt32(count + 1).Value;
-                    }
-                    else
-                    {
-                        value = reader.GetSqlString(count + 1).Value;
-                    }
-
-
-                    var attributeThreeType = reader.GetValue(count + 2).GetType();
-                    if (attributeThreeType == typeof(string))
-                    {
-                        value = reader.GetSqlString(count + 2).Value;
-                    }
-                    else
-                    {
-                        propertyId = reader.GetSqlInt32(count + 2).Value;
-                    }
-
-                    var propertyIdPropertyValue = new KeyValuePair<int, string>(propertyId, value.Trim());
-                    var objectIdPropertyIdPropertyValue = new KeyValuePair<int, KeyValuePair<int, string>>(objectId, propertyIdPropertyValue);
-                    rows.Add(objectIdPropertyIdPropertyValue);
-
+                    var whereClause = $"[objectId] = {objects[i].Key} ";
+                    sql += whereClause;
                 }
-                return rows;
+                else
+                {
+                    var whereClause = $" OR [objectId] = {objects[i].Key} ";
+                    sql += whereClause;
+                }
             }
+            sql += " ORDER BY [objectId], [propertyId]";
+
+            var propertiesValuesByObjectIds = await ExcuteSQLAsync(conString, sql);
+            return propertiesValuesByObjectIds;
         }
-        public async Task<List<KeyValuePair<string, int>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId, string modelName)
+        public async Task<List<KeyValuePair<int, string>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId, string modelName)  // Retrieve objects names and ids
         {
             var sql = $@"  SELECT [objectId] ,[name] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {classId} AND [name] like '{modelName}%' ORDER BY [name]";
+            var objectsNamesAndIds = new List<KeyValuePair<int, string>>();
 
-            var rows = new List<KeyValuePair<string, int>>();
-
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
+            var resultSet = await ExcuteSQLAsync(conString, sql);
+            foreach (var row in resultSet)
             {
-                await connection.OpenAsync();
-
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                int count = 0;
-                while (await reader.ReadAsync())
+                foreach (var value in row.Value)
                 {
-                    var intAttributeValue = 0;
-                    var stringAttributeValue = string.Empty;
-
-                    var attributeOneType = reader.GetValue(count).GetType();
-                    if (attributeOneType == typeof(int))
-                    {
-                        intAttributeValue = reader.GetSqlInt32(count).Value;
-                    }
-                    else
-                    {
-                        stringAttributeValue = reader.GetSqlString(count).Value;
-                    }
-
-
-                    var attributeTwoType = reader.GetValue(count + 1).GetType();
-                    if (attributeTwoType == typeof(string))
-                    {
-                        stringAttributeValue = reader.GetSqlString(count + 1).Value;
-                    }
-                    else
-                    {
-                        intAttributeValue = reader.GetSqlInt32(count + 1).Value;
-                    }
-
-                    rows.Add(new KeyValuePair<string, int>(stringAttributeValue.Trim(), intAttributeValue));
-
+                    objectsNamesAndIds.Add(new KeyValuePair<int, string>(row.Key, value.Trim()));
                 }
-                return rows;
             }
+            return objectsNamesAndIds;
         }
+        //---------------------
+
+
+        // Retrieve relationships between objects
         public async Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName)
         {
             var sql = $@"SELECT tjanst.[objectId] AS [ObjectId nr.1], related.[objectId] AS [ObjectId nr.2] FROM [UDGAHBAS].[dbo].[Object] tjanst JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON tjanst.objectId = rel.sourceObjectId  JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE tjanst.[name] LIKE '{modelName}%' AND tjanst.[classId] = {serviceClassIdOne} AND related.[classId] = {serviceClassIdTwo} AND related.[name] LIKE '{modelName}%' ORDER BY tjanst.[objectId]";
 
-            var rows = new List<KeyValuePair<int, int>>();
+            var objectsIds = new List<KeyValuePair<int, int>>();
 
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
+            var resultSet = await ExcuteSQLAsync(conString, sql);
+            foreach (var row in resultSet)
             {
-                await connection.OpenAsync();
-
-                SqlDataReader reader = await command.ExecuteReaderAsync();
-
-                int count = 0;
-                while (await reader.ReadAsync())
+                foreach (var value in row.Value)
                 {
-                    var objectIdNumberOne = 0;
-                    var objectIdNumberTwo = 0;
-
-                    var attributeOneType = reader.GetValue(count).GetType();
-                    if (attributeOneType == typeof(int))
-                    {
-                        objectIdNumberOne = reader.GetSqlInt32(count).Value;
-                    }
-                    else
-                    {
-                        objectIdNumberOne = int.Parse(reader.GetSqlString(count).Value);
-                    }
-
-                    var attributeTwoType = reader.GetValue(count + 1).GetType();
-                    if (attributeTwoType == typeof(int))
-                    {
-                        objectIdNumberTwo = reader.GetSqlInt32(count + 1).Value;
-                    }
-                    else
-                    {
-                        objectIdNumberTwo = int.Parse(reader.GetSqlString(count + 1).Value);
-                    }
-
-                    var objectIdNumberOneObjectIdNumberTwo = new KeyValuePair<int, int>(objectIdNumberOne, objectIdNumberTwo);
-                    rows.Add(objectIdNumberOneObjectIdNumberTwo);
-
+                    objectsIds.Add(new KeyValuePair<int, int>(row.Key, int.Parse(value)));
                 }
-               
-                return rows;
             }
+            return objectsIds;
         }
-        public async Task<List<string>> GetModelsNamesAsync(string conString)
-        {
-            var objectsNamesAndIds = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, 576, null);
-
-            var modelsNames = new List<string>();
-            foreach (var o in objectsNamesAndIds)
-            {
-                if (o.Value != 12)
-                {
-                    modelsNames.Add(o.Key.Substring(0,3));
-                }                
-            }
-            return modelsNames;
-
-        }
+        //---------------------
 
 
-
-
-        private async Task<List<KeyValuePair<int, List<string>>>> ExcuteSQLAsync(string conString, string sql)
+        // Handles sql execution
+        static async Task<List<KeyValuePair<int, List<string>>>> ExcuteSQLAsync(string conString, string sql)
         {
             var rows = new List<KeyValuePair<int, List<string>>>();
 
-            using (SqlConnection connection = new SqlConnection(conString))
-            using (SqlCommand command = new SqlCommand(sql, connection))
+            using SqlConnection connection = new SqlConnection(conString);
+            using SqlCommand command = new SqlCommand(sql, connection);
+            await connection.OpenAsync();
+
+            SqlDataReader reader = await command.ExecuteReaderAsync();
+
+            if (sql.Contains("ORDER BY"))
             {
-                await connection.OpenAsync();
+                int index = sql.IndexOf("ORDER BY");
+                if (index >= 0) sql = sql.Substring(0, index);
+            }
 
-                SqlDataReader reader = await command.ExecuteReaderAsync();
 
-                var numberOfColumns = sql.Count(s => (s.ToString() == ",")) + 1;
-                while (await reader.ReadAsync())
+            var numberOfColumns = sql.Count(s => (s.ToString() == ",")) + 1;
+            while (await reader.ReadAsync())
+            {
+                var intValue = new int();
+                var stringValues = new List<string>();
+
+                int countIntType = 0;
+                for (int i = 0; i < numberOfColumns; i++)
                 {
-                    var intValue = new int();
-                    var stringValues = new List<string>();
-                    for (int i = 0; i < numberOfColumns; i++)
+                    var valueType = reader.GetValue(i).GetType();
+                    if (valueType == typeof(int))
                     {
-                        var valueType = reader.GetValue(i).GetType();
-                        if (valueType == typeof(int))
+                        if (countIntType == 0)
                         {
                             intValue = reader.GetSqlInt32(i).Value;
+                            countIntType += 1;
                         }
                         else
                         {
-                            var stringValue = reader.GetSqlString(i).Value;
+                            var stringValue = reader.GetSqlInt32(i).ToString();
                             stringValues.Add(stringValue);
-                        }                   
+                        }
                     }
-
-                    rows.Add(new KeyValuePair<int, List<string>>(intValue, stringValues));
-
+                    else
+                    {
+                        var stringValue = reader.GetSqlString(i).Value;
+                        stringValues.Add(stringValue);
+                    }
                 }
-                return rows;
+
+                rows.Add(new KeyValuePair<int, List<string>>(intValue, stringValues));
+
             }
+            return rows;
         }
+        //---------------------
     }
 }
 

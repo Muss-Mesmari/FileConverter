@@ -10,13 +10,11 @@ namespace FileConverter.ViewModels
 	public class DocumentFileViewModel
 	{
 		public SQLServerConfig SQLServerConfig { get; set; }
-	//	public DocumentFile DocumentFile { get; set; }
-	//	public IEnumerable<DocumentFile> DocumentFiles { get; set; } 
 		public ExcelSheet ExcelSheet { get; set; }
 		public CSV CSV { get; set; }
 		public SQLServer SQLServer { get; set; }
 		public string FilePath { get; set; }
-		public List<KeyValuePair<string, int>> ObjectsTypesNames { get; set; }
+		public List<KeyValuePair<int, string>> ObjectsTypesNames { get; set; }
 
 		[Display(Name = "Table name")]
 		public string TableName { get; set; }
@@ -32,7 +30,6 @@ namespace FileConverter.ViewModels
 
 		[Display(Name = "Check the box if you want the objects to be downloaded in separate CSV files")]
 		public bool ZipDownloadingFormat { get; set; }
-
 		public List<KeyValuePair<string, List<string>>> AttributesByTable { get; set; }
 		public bool IsType { get; set; }
 		public bool IsTable { get; set; }
