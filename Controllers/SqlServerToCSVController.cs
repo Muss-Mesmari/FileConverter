@@ -63,7 +63,7 @@ namespace FileConverter.Controllers
             var numberOfTables = attributesByTable.Count;
             var objectsTypesNames = await _databaseServices.GetAllObjectsTypesNamesAsync(tables, conString);
             var modelsNames = await _databaseServices.GetModelsNamesAsync(conString);
-            var numberOfColumns = attributesByTable.Count();
+            var numberOfColumns = attributesByTable.Count;
 
             var sQLServer = new SQLServer
             {
@@ -84,9 +84,9 @@ namespace FileConverter.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName, bool zipDownloadingFormat)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName, bool zipDownloadingFormat, string inputOutputMessage)
         {
-            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName);
+            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName, inputOutputMessage);
 
             var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelName);
             if (!zipDownloadingFormat)

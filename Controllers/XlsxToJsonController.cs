@@ -14,52 +14,36 @@ using System.IO;
 using Microsoft.AspNetCore.Http;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Hosting;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace FileConverter.Controllers
 {
     public class XlsxToJsonController : Controller
     {
-        private readonly DocumentFileDbContext _context;
-		private readonly IDatabaseServices _databaseServices;
-		private readonly IXlsxServices _xlsxServices;
-        private readonly IWebHostEnvironment _webHostEnvironment;        
+        private readonly IDatabaseServices _databaseServices;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public XlsxToJsonController
-			(DocumentFileDbContext context, 
-			IDatabaseServices databaseServices,
-			IXlsxServices xlsxServices,
-            IWebHostEnvironment webHostEnvironment)
+            (
+            IDatabaseServices databaseServices,
+            IWebHostEnvironment webHostEnvironment
+            )
         {
-            _context = context;
-			_databaseServices = databaseServices;
-			_xlsxServices = xlsxServices;
+            _databaseServices = databaseServices;
             _webHostEnvironment = webHostEnvironment;
 
         }
 
 
-		[HttpGet]
-		public IActionResult ViewXLSX()
-		{
-			var excelSheet = new ExcelSheet();
-			return View(new DocumentFileViewModel
-			{
-				ExcelSheet = excelSheet,
-			});
-		}
+        [HttpGet]
+        public IActionResult ViewXLSX()
+        {
+            return View(new DocumentFileViewModel
+            {
 
-		[HttpPost]
-		public IActionResult ViewXLSX(IFormCollection form)
-		{	
-            var fileName = "./wwwroot/ExcelTest.xlsx";
-
-			var excelSheet = _xlsxServices.GetDataFromXlsxFile(fileName);
-
-			return View(new DocumentFileViewModel
-			{
-				ExcelSheet = excelSheet,
             });
-		}
-		  
+        }
+
     }
 }

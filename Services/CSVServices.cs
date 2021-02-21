@@ -120,9 +120,9 @@ namespace FileConverter.Services
             return builder.ToString();
         }
         //---------------------
-       
 
-        public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo, string modelName)
+
+        public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo, string modelName, string inputOutputMessage)
         {
             var rows = new List<string>();
             var headers = new List<string>();
@@ -136,13 +136,32 @@ namespace FileConverter.Services
             else if (cSVDownloadingOption == CSVDownloadingOptions.Objects)
             {
                 // to retrieve a specific type of objects - ex tjänster or VO 
-                rows = await ConvertSQLServerObjectsToCSVAsync(conString, objectIdOne, modelName);
+                rows = await ConvertSQLServerObjectsToCSVAsync(conString, objectIdOne, objectIdTwo, modelName);
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.Tables)
             {
                 // to retrieve all columns names of a table 
-                headers = await ConvertSQLServerTablesHeadersToCSVAsync(conString, tableName);
-                // retrieving columns values will be implemented in the soon future
+                headers = await ConvertSQLServerTablesHeadersToCSVAsync(conString, tableName); // retrieving columns values will be implemented in the soon future                
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesGroupsInInputMessage)
+            {
+                // to retrieve all attributes in the input message
+                rows = await ConvertSQLServerAttributesGroupToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesGroupsOutInputMessage)
+            {
+                // to retrieve all attributes in the output message
+                rows = await ConvertSQLServerAttributesGroupToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesInInputMessage)
+            {
+                // to retrieve all attributes groups in the input message
+                rows = await ConvertSQLServerAttributesToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesInOutputMessage)
+            {
+                // to retrieve all attributes groups in the output message
+                rows = await ConvertSQLServerAttributesToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
             }
 
 
@@ -155,7 +174,15 @@ namespace FileConverter.Services
         }
         public CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo)
         {
-            if (tableName == "Download all tables")
+            if (objectIdOne == 12)
+            {
+                return CSVDownloadingOptions.AttributesInInputMessage;
+            }
+            else if (objectIdOne == 634)
+            {
+                return CSVDownloadingOptions.AttributesGroupsInInputMessage;
+            }
+            else if (tableName == "Download all tables")
             {
                 return CSVDownloadingOptions.DownloadAllTables;
             }
@@ -179,6 +206,26 @@ namespace FileConverter.Services
             }
 
         }
+
+        // Attributes between objects
+        private async Task<List<string>> ConvertSQLServerAttributesToCSVAsync(string conString, int objectIdOne, int objectIdTwo, string modelName, string inputOrOutput)
+        {
+            // Input or output attributes
+            var attributesRows = await CreateCSVObjectsRowsAsync(conString, objectIdOne, objectIdTwo, modelName, inputOrOutput);
+            return attributesRows;
+        }
+        //---------------------
+
+
+        // Attributes groups between objects
+        private async Task<List<string>> ConvertSQLServerAttributesGroupToCSVAsync(string conString, int objectIdOne, int objectIdTwo, string modelName, string inputOrOutput)
+        {
+            // Input or output attributes
+            var attributesGroupsRows = await CreateCSVObjectsRowsAsync(conString, objectIdOne, objectIdTwo, modelName, inputOrOutput);
+            return attributesGroupsRows;
+        }
+        //---------------------
+
 
 
         // Relationship between objects
@@ -211,16 +258,16 @@ namespace FileConverter.Services
         //---------------------
 
         // Rows of objects: values of properties
-        private async Task<List<string>> ConvertSQLServerObjectsToCSVAsync(string conString, int objectIdOne, string modelName)
+        private async Task<List<string>> ConvertSQLServerObjectsToCSVAsync(string conString, int objectIdOne, int classIdTwo, string modelName)
         {
-            var objectsRows = await CreateCSVObjectsRowsAsync(conString, objectIdOne, modelName);
+            var objectsRows = await CreateCSVObjectsRowsAsync(conString, objectIdOne, classIdTwo, modelName, null);
             return objectsRows;
         }
-        private async Task<List<string>> CreateCSVObjectsRowsAsync(string conString, int classId, string modelName)
+        private async Task<List<string>> CreateCSVObjectsRowsAsync(string conString, int classId, int classIdTwo, string modelName, string inputOrOutput)
         {
             // retrieve necessary data from database
             var propertiesIds = await _databaseServices.GetPropertiesIdsByClassIdAsync(conString, classId);
-            var sortedPropertiesByObjectIds = await _databaseServices.GetPropertiesAsync(conString, classId, modelName);
+            var sortedPropertiesByObjectIds = await _databaseServices.GetPropertiesAsync(conString, classId, classIdTwo, modelName, inputOrOutput);
 
             // prepare the data to fit CSV converting
             var propertiesSortedByObjectIds = new List<KeyValuePair<int, List<KeyValuePair<int, string>>>>();
@@ -356,7 +403,7 @@ namespace FileConverter.Services
             {
                 var headers = CreateCSVHeadersForAllTheTables(columnsNamesSortedByTable);
                 return headers;
-            }           
+            }
         }
         static List<string> GreateCSVHeaderForOneTable(string tableName, List<KeyValuePair<string, List<string>>> columnsNamesSortedByTable)
         {

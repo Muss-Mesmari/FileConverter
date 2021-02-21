@@ -12,6 +12,10 @@ namespace FileConverter.Models
         Objects,
         Relationships,
         DownloadAllTables,
-        DownloadAllObjects
+        DownloadAllObjects,
+        AttributesInInputMessage,
+        AttributesInOutputMessage,
+        AttributesGroupsInInputMessage,
+        AttributesGroupsOutInputMessage,
     }
 }

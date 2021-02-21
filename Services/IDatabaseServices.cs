@@ -18,7 +18,8 @@ namespace FileConverter.Services
 		Task<List<KeyValuePair<int, List<string>>>> GetPropertiesNamesByPropertiesIdsAsync(string conString, int classId);
 		Task<List<KeyValuePair<int, List<string>>>> GetPropertiesValuesByObjectIdsSortedByObjectIdsAsync(string conString, int classId, string modelName);
 		Task<string> GetObjectTypeNameByClassIdAsync(int objectId, string conString);
-		Task<List<KeyValuePair<int, List<string>>>> GetPropertiesAsync(string conString, int classId, string modelName);
+		Task<List<KeyValuePair<int, List<string>>>> GetPropertiesAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName, string inputOrOutput);
 		Task<List<KeyValuePair<int, string>>> GetPropertiesIdsByClassIdAsync(string conString, int classId);
+		Task<List<KeyValuePair<int, string>>> GetAttributesOrAttributesGroupsNamesAndIdsThatAreUsedInsideAttributesGroupsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName, string inputOrOutput);
 	}
 }

@@ -80,6 +80,15 @@
                         <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
                     </div>
 
+                    <div class="form-group" id="downloading-type-option-Four" style="display:block">
+                        <label asp-for="InputOutputMessage" class="control-label"></label>
+                        <select asp-for="InputOutputMessage" class="form-control">
+                            <option value="">Select a type</option>
+                            <option value="">Download all</option>
+                            <option value="I">Input message</option>
+                            <option value="O">Output message</option>
+                        </select>
+                    </div>
 
                     <div class="form-group" id="downloading-type-option-Three" style="display:block">
                         <label asp-for="ModelName" class="control-label"></label>
@@ -88,7 +97,7 @@
                             <option value="">Download all</option>
                         </select>
                     </div>
-              
+
                     <div class="form-group" id="downloading-type-option-Two" style="display:block">
                         <label asp-for="ObjectIdTwo" class="control-label"></label>
                         <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">

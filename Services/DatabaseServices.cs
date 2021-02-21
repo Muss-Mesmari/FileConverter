@@ -89,7 +89,6 @@ namespace FileConverter.Services
         }
         static async Task<List<string>> GetColumnsByTableNameAsync(string conString, string table)
         {
-            table = "ObjectCount";
             var sql = $@"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N'{table}'";
             var resultSet = await ExcuteSQLAsync(conString, sql);
             var columns = new List<string>();
@@ -157,11 +156,20 @@ namespace FileConverter.Services
 
 
         // Retrieve properties of objects
-        public async Task<List<KeyValuePair<int, List<string>>>> GetPropertiesAsync(string conString, int classId, string modelName)
+        public async Task<List<KeyValuePair<int, List<string>>>> GetPropertiesAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName, string inputOrOutput)
         {
             var sql = $@"SELECT [objectId], property.[propertyId], property.[propertyName], PropertyValue.[value] FROM [UDGAHBAS].[dbo].[Property] property JOIN [UDGAHBAS].[dbo].[PropertyValue] PropertyValue on PropertyValue.propertyId = property.propertyId WHERE ";
 
-            var objects = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, classId, modelName);
+            var objects = new List<KeyValuePair<int, string>>();
+            if (serviceClassIdOne == 12)
+            {
+                objects = await GetAttributesOrAttributesGroupsNamesAndIdsThatAreUsedInsideAttributesGroupsByClassIdsAsync(conString, serviceClassIdOne, serviceClassIdTwo, modelName, inputOrOutput);
+            }
+            else
+            {
+                objects = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, serviceClassIdOne, modelName);
+            }
+
             for (int i = 0; i < objects.Count; i++)
             {
                 if (i == 0)
@@ -267,6 +275,26 @@ namespace FileConverter.Services
         //---------------------
 
 
+        // Retrieve attributes groups and aattributes
+        public async Task<List<KeyValuePair<int, string>>> GetAttributesOrAttributesGroupsNamesAndIdsThatAreUsedInsideAttributesGroupsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName, string inputOrOutput)
+        {
+            var sql = $@" SELECT related.objectId AS [Related objectId] ,related.[name] AS [Relation till] FROM [UDGAHBAS].[dbo].[Object] [Object] JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON [Object].objectId = rel.sourceObjectId JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE [Object].[classId] = 634 AND [Object].[name] like '{modelName}%{inputOrOutput}' AND related.classId = {serviceClassIdOne} ORDER BY [Object].objectId ";
+
+            var objectsNamesAndIds = new List<KeyValuePair<int, string>>();
+
+            var resultSet = await ExcuteSQLAsync(conString, sql);
+            foreach (var row in resultSet)
+            {
+                foreach (var value in row.Value)
+                {
+                    objectsNamesAndIds.Add(new KeyValuePair<int, string>(row.Key, value.Trim()));
+                }
+            }
+            return objectsNamesAndIds;
+        }
+        //---------------------
+
+
         // Retrieve relationships between objects
         public async Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName)
         {
@@ -297,47 +325,63 @@ namespace FileConverter.Services
             await connection.OpenAsync();
 
             SqlDataReader reader = await command.ExecuteReaderAsync();
-
-            if (sql.Contains("ORDER BY"))
-            {
-                int index = sql.IndexOf("ORDER BY");
-                if (index >= 0) sql = sql.Substring(0, index);
-            }
-
-
-            var numberOfColumns = sql.Count(s => (s.ToString() == ",")) + 1;
-            while (await reader.ReadAsync())
+            if (sql.Contains("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA"))
             {
                 var intValue = new int();
                 var stringValues = new List<string>();
+                var attributeValues = new List<string>();
 
-                int countIntType = 0;
-                for (int i = 0; i < numberOfColumns; i++)
+                while (await reader.ReadAsync())
                 {
-                    var valueType = reader.GetValue(i).GetType();
-                    if (valueType == typeof(int))
-                    {
-                        if (countIntType == 0)
-                        {
-                            intValue = reader.GetSqlInt32(i).Value;
-                            countIntType += 1;
-                        }
-                        else
-                        {
-                            var stringValue = reader.GetSqlInt32(i).ToString();
-                            stringValues.Add(stringValue);
-                        }
-                    }
-                    else
-                    {
-                        var stringValue = reader.GetSqlString(i).Value;
-                        stringValues.Add(stringValue);
-                    }
+                    var stringValue = reader.GetSqlString(0).Value;
+                    stringValues.Add(stringValue);
                 }
 
                 rows.Add(new KeyValuePair<int, List<string>>(intValue, stringValues));
-
             }
+            else
+            {
+                if (sql.Contains("ORDER BY"))
+                {
+                    int index = sql.IndexOf("ORDER BY");
+                    if (index >= 0) sql = sql.Substring(0, index);
+                }
+
+                var numberOfColumns = sql.Count(s => (s.ToString() == ",")) + 1;
+                while (await reader.ReadAsync())
+                {
+                    var intValue = new int();
+                    var stringValues = new List<string>();
+
+                    int countIntType = 0;
+                    for (int i = 0; i < numberOfColumns; i++)
+                    {
+                        var valueType = reader.GetValue(i).GetType();
+                        if (valueType == typeof(int))
+                        {
+                            if (countIntType == 0)
+                            {
+                                intValue = reader.GetSqlInt32(i).Value;
+                                countIntType += 1;
+                            }
+                            else
+                            {
+                                var stringValue = reader.GetSqlInt32(i).ToString();
+                                stringValues.Add(stringValue);
+                            }
+                        }
+                        else
+                        {
+                            var stringValue = reader.GetSqlString(i).Value;
+                            stringValues.Add(stringValue);
+                        }
+                    }
+
+                    rows.Add(new KeyValuePair<int, List<string>>(intValue, stringValues));
+
+                }
+            }
+
             return rows;
         }
         //---------------------

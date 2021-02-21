@@ -17,6 +17,7 @@ function ShowDownloadingByType() {
     var typeInputOne = document.getElementById("downloading-type-option-One");
     var typeInputTwo = document.getElementById("downloading-type-option-Two");
     var typeInputThree = document.getElementById("downloading-type-option-Three");
+    var typeInputFour = document.getElementById("downloading-type-option-Four");
     var tableInput = document.getElementById("downloading-table-option");
 
 
@@ -25,6 +26,7 @@ function ShowDownloadingByType() {
         typeInputOne.style.display = "block";
         typeInputTwo.style.display = "block";
         typeInputThree.style.display = "block";
+        typeInputFour.style.display = "block";
         tableInput.style.display = "none";
     }
 }
@@ -34,6 +36,7 @@ function ShowDownloadingByTable() {
     var typeInputOne = document.getElementById("downloading-type-option-One");
     var typeInputTwo = document.getElementById("downloading-type-option-Two");
     var typeInputThree = document.getElementById("downloading-type-option-Three");
+    var typeInputFour = document.getElementById("downloading-type-option-Four");
     var tableInput = document.getElementById("downloading-table-option");
 
     if (tableInput.style.display === "none") {
@@ -41,6 +44,7 @@ function ShowDownloadingByTable() {
         typeInputOne.style.display = "none";
         typeInputTwo.style.display = "none";
         typeInputThree.style.display = "none";
+        typeInputFour.style.display = "none";
     }
 }
 
