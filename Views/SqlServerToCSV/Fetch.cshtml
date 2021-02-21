@@ -71,47 +71,62 @@
                         var values = Model.ObjectsTypesNames.Select(x => x.Value.ToString()).ToList();
                     }
 
-                    <div class="form-group" id="downloading-type-option-One" style="display:block">
-                        <label asp-for="ObjectIdOne" class="control-label"></label>
-                        <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
-                            <option value="">Select a type</option>
-                            <option value="Download all">Download all</option>
-                        </select>
-                        <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
-                    </div>
+                <div class="col">
+                    <div class="card bg-transparent border-0">
+                        <div class="card-deck">
+                            <div class="card bg-transparent border-0">
 
-                    <div class="form-group" id="downloading-type-option-Four" style="display:block">
-                        <label asp-for="InputOutputMessage" class="control-label"></label>
-                        <select asp-for="InputOutputMessage" class="form-control">
-                            <option value="">Select a type</option>
-                            <option value="">Download all</option>
-                            <option value="I">Input message</option>
-                            <option value="O">Output message</option>
-                        </select>
-                    </div>
+                                <div class="h4"> Main object</div>
 
-                    <div class="form-group" id="downloading-type-option-Three" style="display:block">
-                        <label asp-for="ModelNameOne" class="control-label"></label>
-                        <select asp-for="ModelNameOne" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
-                            <option value="">Select a type</option>
-                            <option value="">Download all</option>
-                        </select>
-                    </div>
+                                <div class="form-group" id="downloading-type-option-One" style="display:block">
+                                    <label asp-for="ObjectIdOne" class="control-label"></label>
+                                    <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
+                                        <option value="">Select a type</option>
+                                        <option value="Download all">Download all</option>
+                                    </select>
+                                    <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
+                                </div>
 
-                    <div class="form-group" id="downloading-type-option-Two" style="display:block">
-                        <label asp-for="ObjectIdTwo" class="control-label"></label>
-                        <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
-                            <option value="">Select a type</option>
-                            <option value="Download all">Download all</option>
-                        </select>
-                    </div>
+                                <div class="form-group" id="downloading-type-option-Three" style="display:block">
+                                    <label asp-for="ModelNameOne" class="control-label"></label>
+                                    <select asp-for="ModelNameOne" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
+                                        <option value="">Select a type</option>
+                                        <option value="">Download all</option>
+                                    </select>
+                                </div>
 
-                    <div class="form-group" id="downloading-type-option-Five" style="display:block">
-                        <label asp-for="ModelNameTwo" class="control-label"></label>
-                        <select asp-for="ModelNameTwo" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
-                            <option value="">Select a type</option>
-                            <option value="">Download all</option>
-                        </select>
+                                <div class="form-group" id="downloading-type-option-Four" style="display:block">
+                                    <label asp-for="InputOutputMessage" class="control-label"></label>
+                                    <select asp-for="InputOutputMessage" class="form-control">
+                                        <option value="">Select a type</option>
+                                        <option value="">Download all</option>
+                                        <option value="I">Input message</option>
+                                        <option value="O">Output message</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                            <div class="card bg-transparent border-0">
+
+                                <div class="h4"> Related object</div>
+
+                                <div class="form-group" id="downloading-type-option-Two" style="display:block">
+                                    <label asp-for="ObjectIdTwo" class="control-label"></label>
+                                    <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
+                                        <option value="">Select a type</option>
+                                        <option value="Download all">Download all</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="downloading-type-option-Five" style="display:block">
+                                    <label asp-for="ModelNameTwo" class="control-label"></label>
+                                    <select asp-for="ModelNameTwo" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
+                                        <option value="">Select a type</option>
+                                        <option value="">Download all</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group" id="downloading-table-option" style="display:none">
@@ -123,14 +138,17 @@
                         <span asp-validation-for="TableName" class="text-danger"></span>
                     </div>
 
-                    <div class="form-group">
-                        <div class="checkbox">
-                            <label asp-for="ZipDownloadingFormat">
-                                <input asp-for="ZipDownloadingFormat" />
-                                @Html.DisplayNameFor(d => d.ZipDownloadingFormat)
-                            </label>
+                    <div class="card bg-transparent border-0">
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <label asp-for="ZipDownloadingFormat">
+                                    <input asp-for="ZipDownloadingFormat" />
+                                    @Html.DisplayNameFor(d => d.ZipDownloadingFormat)
+                                </label>
+                            </div>
                         </div>
                     </div>
+                </div>
 
                     <div class="form-group">
                         <input type="submit" value="Download" class="btn btn-success text-white" />

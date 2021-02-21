@@ -28,7 +28,7 @@ namespace FileConverter.ViewModels
 		[Display(Name = "Desired model (Optional)")]
 		public string ModelNameOne { get; set; }
 
-		[Display(Name = "Desired model (Optional)")]
+		[Display(Name = "Related desired model (Optional)")]
 		public string ModelNameTwo { get; set; }
 
 		[Display(Name = "Desired input or output message of attributes (Optional)")]
