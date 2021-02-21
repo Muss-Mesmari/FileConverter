@@ -122,21 +122,21 @@ namespace FileConverter.Services
         //---------------------
 
 
-        public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo, string modelName, string inputOutputMessage)
+        public async Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo, string modelNameOne, string modelNameTwo, string inputOutputMessage)
         {
             var rows = new List<string>();
             var headers = new List<string>();
 
-            var cSVDownloadingOption = ChooseCSVDownloadingOptions(tableName, objectIdOne, objectIdTwo);
+            var cSVDownloadingOption = ChooseCSVDownloadingOptions(tableName, objectIdOne, objectIdTwo, inputOutputMessage);
             if (cSVDownloadingOption == CSVDownloadingOptions.Relationships)
             {
                 // to retrieve relationsships - ex relationsship between tjänster and vo
-                rows = await ConvertSQLServerRelationshipToCSVAsync(conString, objectIdOne, objectIdTwo, modelName);
+                rows = await ConvertSQLServerRelationshipToCSVAsync(conString, objectIdOne, objectIdTwo, modelNameOne, modelNameTwo);
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.Objects)
             {
                 // to retrieve a specific type of objects - ex tjänster or VO 
-                rows = await ConvertSQLServerObjectsToCSVAsync(conString, objectIdOne, objectIdTwo, modelName);
+                rows = await ConvertSQLServerObjectsToCSVAsync(conString, objectIdOne, objectIdTwo, modelNameOne);
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.Tables)
             {
@@ -146,22 +146,27 @@ namespace FileConverter.Services
             else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesGroupsInInputMessage)
             {
                 // to retrieve all attributes in the input message
-                rows = await ConvertSQLServerAttributesGroupToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
+                rows = await ConvertSQLServerAttributesGroupToCSVAsync(conString, objectIdOne, objectIdTwo, modelNameOne, inputOutputMessage);
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesGroupsOutInputMessage)
             {
                 // to retrieve all attributes in the output message
-                rows = await ConvertSQLServerAttributesGroupToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
+                rows = await ConvertSQLServerAttributesGroupToCSVAsync(conString, objectIdOne, objectIdTwo, modelNameOne, inputOutputMessage);
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesInInputMessage)
             {
                 // to retrieve all attributes groups in the input message
-                rows = await ConvertSQLServerAttributesToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
+                rows = await ConvertSQLServerAttributesToCSVAsync(conString, objectIdOne, objectIdTwo, modelNameOne, inputOutputMessage);
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.AttributesInOutputMessage)
             {
                 // to retrieve all attributes groups in the output message
-                rows = await ConvertSQLServerAttributesToCSVAsync(conString, objectIdOne, objectIdTwo, modelName, inputOutputMessage);
+                rows = await ConvertSQLServerAttributesToCSVAsync(conString, objectIdOne, objectIdTwo, modelNameOne, inputOutputMessage);
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.RelationshipsToAttributesOrAttributesGroupsInputMessage)
+            {
+                // to retrieve relationships between attributes or attributesGroup objects
+                rows = await ConvertSQLServerRelationshipToAttributesOrAttributesGroupsToCSVAsync(conString, objectIdOne, objectIdTwo, modelNameOne, inputOutputMessage);
             }
 
 
@@ -172,15 +177,19 @@ namespace FileConverter.Services
             };
             return csv;
         }
-        public CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo)
+        public CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo, string inputOutputMessage)
         {
-            if (objectIdOne == 12)
+            if (objectIdOne == 12 && objectIdTwo == 0 && inputOutputMessage != null)
             {
                 return CSVDownloadingOptions.AttributesInInputMessage;
             }
-            else if (objectIdOne == 634)
+            else if (objectIdOne == 634 && objectIdTwo == 0 && inputOutputMessage != null)
             {
                 return CSVDownloadingOptions.AttributesGroupsInInputMessage;
+            }
+            else if (objectIdOne == 12 && objectIdTwo != 0 && inputOutputMessage != null)
+            {
+                return CSVDownloadingOptions.RelationshipsToAttributesOrAttributesGroupsInputMessage;
             }
             else if (tableName == "Download all tables")
             {
@@ -227,17 +236,49 @@ namespace FileConverter.Services
         //---------------------
 
 
-
-        // Relationship between objects
-        private async Task<List<string>> ConvertSQLServerRelationshipToCSVAsync(string conString, int objectIdOne, int objectIdTwo, string modelName)
+        // Retrieve relationships between attributes or attributesGroup objects
+        private async Task<List<string>> ConvertSQLServerRelationshipToAttributesOrAttributesGroupsToCSVAsync(string conString, int objectIdOne, int objectIdTwo, string modelNameOne, string inputOrOutput)
         {
-            var relationshipsRows = await CreateCSVRelationshipRowsAsync(conString, objectIdOne, objectIdTwo, modelName);
+            var relationshipsRows = await CreateCSVRelationshipToAttributesOrAttributesGroupsRowsAsync(conString, objectIdOne, objectIdTwo, modelNameOne, inputOrOutput);
             return relationshipsRows;
         }
-        private async Task<List<string>> CreateCSVRelationshipRowsAsync(string conString, int objectIdOne, int objectIdTwo, string modelName)
+        private async Task<List<string>> CreateCSVRelationshipToAttributesOrAttributesGroupsRowsAsync(string conString, int objectIdOne, int objectIdTwo, string modelNameOne, string inputOrOutput)
         {
             // retrieve necessary data from database
-            var relationshipsIdsRows = await _databaseServices.GetRelationshipsByClassIdsAsync(conString, objectIdOne, objectIdTwo, modelName);
+            var relationshipsIdsRows = await _databaseServices.GetRelationshipsBetweenAttributesOrAttributesGroupAndOtherObjectssByClassIdsAsync(conString, objectIdOne, objectIdTwo, modelNameOne, inputOrOutput);
+
+            // Convert database data to CSV
+            var rows = new List<string>
+            {
+                "ObjectId,RelatedObjectId"  // add the header
+            };
+            foreach (var relationshipIdsRow in relationshipsIdsRows)
+            {
+                var objectId = CreateValidCSVIntValue(relationshipIdsRow.Key);
+                var RelatedObjectId = CreateValidCSVIntValue(relationshipIdsRow.Value);
+                var relationshipName = "related to";
+
+                var row = objectId.ToString().Trim() + "," + RelatedObjectId.ToString().Trim() + "," + relationshipName.Trim();
+                rows.Add(row);
+            }
+            return rows;
+        }
+        //---------------------
+
+
+
+
+
+        // Relationship between objects
+        private async Task<List<string>> ConvertSQLServerRelationshipToCSVAsync(string conString, int objectIdOne, int objectIdTwo, string modelNameOne, string modelNameTwo)
+        {
+            var relationshipsRows = await CreateCSVRelationshipRowsAsync(conString, objectIdOne, objectIdTwo, modelNameOne, modelNameTwo);
+            return relationshipsRows;
+        }
+        private async Task<List<string>> CreateCSVRelationshipRowsAsync(string conString, int objectIdOne, int objectIdTwo, string modelNameOne, string modelNameTwo)
+        {
+            // retrieve necessary data from database
+            var relationshipsIdsRows = await _databaseServices.GetRelationshipsByClassIdsAsync(conString, objectIdOne, objectIdTwo, modelNameOne, modelNameTwo);
 
             // Convert database data to CSV
             var rows = new List<string>

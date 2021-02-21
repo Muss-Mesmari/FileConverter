@@ -104,7 +104,7 @@ namespace FileConverter.Services
         }
         public async Task<string> CreateFileNameAsync(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName)
         {
-            var cSVDownloadingOption = _CSVServices.ChooseCSVDownloadingOptions(tableName, objectIdOne, ObjectIdTwo);
+            var cSVDownloadingOption = _CSVServices.ChooseCSVDownloadingOptions(tableName, objectIdOne, ObjectIdTwo, null);
             if (cSVDownloadingOption == CSVDownloadingOptions.Tables)
             {
                 var fileName = tableName;

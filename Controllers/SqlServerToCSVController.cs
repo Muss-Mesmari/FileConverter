@@ -84,11 +84,11 @@ namespace FileConverter.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName, bool zipDownloadingFormat, string inputOutputMessage)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelNameOne, string modelNameTwo, bool zipDownloadingFormat, string inputOutputMessage)
         {
-            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelName, inputOutputMessage);
+            var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelNameOne, modelNameTwo, inputOutputMessage);
 
-            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelName);
+            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelNameOne);
             if (!zipDownloadingFormat)
             {
                 var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);

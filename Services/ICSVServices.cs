@@ -8,11 +8,11 @@ namespace FileConverter.Services
 {
     public interface ICSVServices
     {
-        Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo, string modelName, string inputOutputMessage);
+        Task<CSV> ConvertSQLServerToCSVAsync(string conString, string tableName, int objectIdOne, int objectIdTwo, string modelNameOne, string modelNameTwo, string inputOutputMessage);
         CSV ConvertXlsxToCSV(string fileName);
         string BuildCsvStringFromXlsxFile(CSV csv);
         string BuildCsvStringFromSQLServer(CSV csv);
         List<string> BuildMultipleCsvStringsFromSQLServer(CSV csv);
-        CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo);
+        CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo, string inputOutputMessage);
     }
 }

@@ -91,8 +91,8 @@
                     </div>
 
                     <div class="form-group" id="downloading-type-option-Three" style="display:block">
-                        <label asp-for="ModelName" class="control-label"></label>
-                        <select asp-for="ModelName" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
+                        <label asp-for="ModelNameOne" class="control-label"></label>
+                        <select asp-for="ModelNameOne" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
                             <option value="">Select a type</option>
                             <option value="">Download all</option>
                         </select>
@@ -103,6 +103,14 @@
                         <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
                             <option value="">Select a type</option>
                             <option value="Download all">Download all</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="downloading-type-option-Five" style="display:block">
+                        <label asp-for="ModelNameTwo" class="control-label"></label>
+                        <select asp-for="ModelNameTwo" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
+                            <option value="">Select a type</option>
+                            <option value="">Download all</option>
                         </select>
                     </div>
 

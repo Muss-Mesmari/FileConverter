@@ -296,9 +296,9 @@ namespace FileConverter.Services
 
 
         // Retrieve relationships between objects
-        public async Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelName)
+        public async Task<List<KeyValuePair<int, int>>> GetRelationshipsByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelNameOne, string modelNameTwo)
         {
-            var sql = $@"SELECT tjanst.[objectId] AS [ObjectId nr.1], related.[objectId] AS [ObjectId nr.2] FROM [UDGAHBAS].[dbo].[Object] tjanst JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON tjanst.objectId = rel.sourceObjectId  JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE tjanst.[name] LIKE '{modelName}%' AND tjanst.[classId] = {serviceClassIdOne} AND related.[classId] = {serviceClassIdTwo} AND related.[name] LIKE '{modelName}%' ORDER BY tjanst.[objectId]";
+            var sql = $@"SELECT tjanst.[objectId] AS [ObjectId nr.1], related.[objectId] AS [ObjectId nr.2] FROM [UDGAHBAS].[dbo].[Object] tjanst JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON tjanst.objectId = rel.sourceObjectId  JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE tjanst.[name] LIKE '{modelNameOne}%' AND tjanst.[classId] = {serviceClassIdOne} AND related.[classId] = {serviceClassIdTwo} AND related.[name] LIKE '{modelNameTwo}%' ORDER BY tjanst.[objectId]";
 
             var objectsIds = new List<KeyValuePair<int, int>>();
 
@@ -314,6 +314,25 @@ namespace FileConverter.Services
         }
         //---------------------
 
+
+        // Retrieve relationships between attributes or attributesGroup objects
+        public async Task<List<KeyValuePair<int, int>>> GetRelationshipsBetweenAttributesOrAttributesGroupAndOtherObjectssByClassIdsAsync(string conString, int serviceClassIdOne, int serviceClassIdTwo, string modelNameOne, string inputOrOutput)
+        {
+            var sql = $@" SELECT related.objectId AS [objectId] ,[Object].objectId AS [Related objectId] FROM [UDGAHBAS].[dbo].[Object] [Object] JOIN [UDGAHBAS].[dbo].[ObjectRelship] rel ON [Object].objectId = rel.sourceObjectId JOIN [UDGAHBAS].[dbo].[Object] related ON related.objectId = rel.targetObjectId WHERE [Object].[classId] = 634 AND [Object].[name] like '{modelNameOne}%{inputOrOutput}' AND related.classId = {serviceClassIdOne} ORDER BY [Object].objectId ";
+
+            var objectsIds = new List<KeyValuePair<int, int>>();
+
+            var resultSet = await ExcuteSQLAsync(conString, sql);
+            foreach (var row in resultSet)
+            {
+                foreach (var value in row.Value)
+                {
+                    objectsIds.Add(new KeyValuePair<int, int>(row.Key, int.Parse(value)));
+                }
+            }
+            return objectsIds;
+        }
+        //---------------------
 
         // Handles sql execution
         static async Task<List<KeyValuePair<int, List<string>>>> ExcuteSQLAsync(string conString, string sql)

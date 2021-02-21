@@ -17,5 +17,7 @@ namespace FileConverter.Models
         AttributesInOutputMessage,
         AttributesGroupsInInputMessage,
         AttributesGroupsOutInputMessage,
+        RelationshipsToAttributesOrAttributesGroupsInputMessage,
+        RelationshipsToAttributesOrAttributesGroupsOutputMessage
     }
 }
