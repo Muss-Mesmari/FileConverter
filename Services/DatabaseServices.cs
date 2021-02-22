@@ -38,12 +38,9 @@ namespace FileConverter.Services
             var objectsNamesAndIds = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, voId, null);
 
             var modelsNames = new List<string>();
-            foreach (var o in objectsNamesAndIds)
+            foreach (var objectsNameAndId in objectsNamesAndIds)
             {
-                if (o.Key != 12)
-                {
-                    modelsNames.Add(o.Value.Substring(0, 3));
-                }
+                modelsNames.Add(objectsNameAndId.Value[0].Substring(0, 3));
             }
             return modelsNames;
         }
@@ -161,13 +158,24 @@ namespace FileConverter.Services
             var sql = $@"SELECT [objectId], property.[propertyId], property.[propertyName], PropertyValue.[value] FROM [UDGAHBAS].[dbo].[Property] property JOIN [UDGAHBAS].[dbo].[PropertyValue] PropertyValue on PropertyValue.propertyId = property.propertyId WHERE ";
 
             var objects = new List<KeyValuePair<int, string>>();
+            var objectstmp = new List<KeyValuePair<int, List<string>>>();
             if (serviceClassIdOne == 12)
             {
                 objects = await GetAttributesOrAttributesGroupsNamesAndIdsThatAreUsedInsideAttributesGroupsByClassIdsAsync(conString, serviceClassIdOne, serviceClassIdTwo, modelName, inputOrOutput);
             }
             else
             {
-                objects = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, serviceClassIdOne, modelName);
+                objectstmp = await GetObjectsNamesAndObjectIdsByClassIdAsync(conString, serviceClassIdOne, modelName);
+
+                var objectsNamesAndIds = new List<KeyValuePair<int, string>>();
+                foreach (var row in objectstmp)
+                {
+                    foreach (var value in row.Value)
+                    {
+                        objectsNamesAndIds.Add(new KeyValuePair<int, string>(row.Key, value.Trim()));
+                    }
+                }
+                objects = objectsNamesAndIds;
             }
 
             for (int i = 0; i < objects.Count; i++)
@@ -257,20 +265,13 @@ namespace FileConverter.Services
             var propertiesValuesByObjectIds = await ExcuteSQLAsync(conString, sql);
             return propertiesValuesByObjectIds;
         }
-        public async Task<List<KeyValuePair<int, string>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId, string modelName)  // Retrieve objects names and ids
+        public async Task<List<KeyValuePair<int, List<string>>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId, string modelName)  // Retrieve objects names and ids
         {
-            var sql = $@"  SELECT [objectId] ,[name] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {classId} AND [name] like '{modelName}%' ORDER BY [name]";
+            var sql = $@"  SELECT [objectId] ,[name], [description] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {classId} AND [name] like '{modelName}%' ORDER BY [name]";
             var objectsNamesAndIds = new List<KeyValuePair<int, string>>();
 
             var resultSet = await ExcuteSQLAsync(conString, sql);
-            foreach (var row in resultSet)
-            {
-                foreach (var value in row.Value)
-                {
-                    objectsNamesAndIds.Add(new KeyValuePair<int, string>(row.Key, value.Trim()));
-                }
-            }
-            return objectsNamesAndIds;
+            return resultSet;
         }
         //---------------------
 
@@ -391,7 +392,16 @@ namespace FileConverter.Services
                         }
                         else
                         {
-                            var stringValue = reader.GetSqlString(i).Value;
+                            var stringValue = string.Empty;
+                            var isValueNull = reader.IsDBNull(i);
+                            if (isValueNull)
+                            {
+                                stringValue = string.Empty;
+                            }
+                            else
+                            {
+                                stringValue = reader.GetSqlString(i).Value;
+                            }
                             stringValues.Add(stringValue);
                         }
                     }

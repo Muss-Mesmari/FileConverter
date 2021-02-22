@@ -308,14 +308,14 @@ namespace FileConverter.Services
         {
             // retrieve necessary data from database
             var propertiesIds = await _databaseServices.GetPropertiesIdsByClassIdAsync(conString, classId);
-            var sortedPropertiesByObjectIds = await _databaseServices.GetPropertiesAsync(conString, classId, classIdTwo, modelName, inputOrOutput);
+            var sortedPropertiesByObjectIds = await _databaseServices.GetPropertiesAsync(conString, classId, classIdTwo, modelName, inputOrOutput);      
 
             // prepare the data to fit CSV converting
             var propertiesSortedByObjectIds = new List<KeyValuePair<int, List<KeyValuePair<int, string>>>>();
             for (int i = 0; i < sortedPropertiesByObjectIds.Count; i++)
             {
                 var mergedPropertiesThatHaveTheSameObjectIds = MergePropertiesThatHaveTheSameObjectIds(sortedPropertiesByObjectIds, i);
-                var addedMissingPropertiesForEveryObjectId = AddMissingPropertiesForEveryObjectId(mergedPropertiesThatHaveTheSameObjectIds, propertiesIds);
+                var addedMissingPropertiesForEveryObjectId = AddMissingPropertiesForEveryObjectId(mergedPropertiesThatHaveTheSameObjectIds, propertiesIds);            
                 var propertiesWithoutDuplicates = RemoveDuplicatedProperties(addedMissingPropertiesForEveryObjectId, propertiesIds);
                 var orderedPropertiesById = OrderPropertiesById(propertiesWithoutDuplicates);
 
@@ -323,8 +323,11 @@ namespace FileConverter.Services
                 propertiesSortedByObjectIds.Add(propertiesSortedByObjectId);
             }
 
+            // Add properties names in the top of the list
+            var propertiesNamesAndDescriptionAddedForEveryObjectId = await AddPropertiesNamesAndDescriptionForEveryObjectIdAsync(conString, classId, classIdTwo, modelName, inputOrOutput, propertiesSortedByObjectIds);
+          
             // Add headers in the top of the list
-            var propertiesSortedByObjectIdsWithHeader = await AddPropertiesNamesASHeaderAsync(conString, classId, propertiesSortedByObjectIds);
+            var propertiesSortedByObjectIdsWithHeader = await AddPropertiesNamesASHeaderAsync(conString, classId, propertiesNamesAndDescriptionAddedForEveryObjectId);
 
             // Convert database data to CSV
             var rows = AddCommasBetweenValues(propertiesSortedByObjectIdsWithHeader);
@@ -366,6 +369,58 @@ namespace FileConverter.Services
             }
             return properties;
         }
+        private async Task<List<KeyValuePair<int, List<KeyValuePair<int, string>>>>> AddPropertiesNamesAndDescriptionForEveryObjectIdAsync(string conString, int classId, int classIdTwo, string modelName, string inputOrOutput, List<KeyValuePair<int, List<KeyValuePair<int, string>>>> propertiesSortedByObjectIds)
+        {
+            var propertiesNamesAndIds = new List<KeyValuePair<int, List<KeyValuePair<int, string>>>>();
+          
+            if (classId == 12)
+            {
+                var attributesPropertiesNamesAndIds = await _databaseServices.GetAttributesOrAttributesGroupsNamesAndIdsThatAreUsedInsideAttributesGroupsByClassIdsAsync(conString, classId, classIdTwo, modelName, inputOrOutput);
+                for (int j = 0; j < propertiesSortedByObjectIds.Count; j++)
+                {
+                    var propertyNameAndId = new List<KeyValuePair<int, string>>();
+                    for (int i = 0; i < attributesPropertiesNamesAndIds.Count; i++)
+                    {
+                        if (propertiesSortedByObjectIds[j].Key == attributesPropertiesNamesAndIds[i].Key)
+                        {
+                            var propertyId = 0;
+                            var propertyValue = attributesPropertiesNamesAndIds[i].Value;
+                            var property = new KeyValuePair<int, string>(propertyId, propertyValue);
+                            propertyNameAndId.Add(property);
+                            break;
+                        }
+                    }
+                    var propertiesSortedByObjectId = propertyNameAndId.Concat(propertiesSortedByObjectIds[j].Value).ToList();
+                    var objectId = propertiesSortedByObjectIds[j].Key;
+
+                    propertiesNamesAndIds.Add(new KeyValuePair<int, List<KeyValuePair<int, string>>>(objectId, propertiesSortedByObjectId));
+                }
+            }
+            else
+            {
+                var objectsNamesAndIds = await _databaseServices.GetObjectsNamesAndObjectIdsByClassIdAsync(conString, classId, modelName);
+                for (int j = 0; j < propertiesSortedByObjectIds.Count; j++)
+                {
+                    var propertyNameAndId = new List<KeyValuePair<int, string>>();
+                    for (int i = 0; i < objectsNamesAndIds.Count; i++)
+                    {
+                        if (propertiesSortedByObjectIds[j].Key == objectsNamesAndIds[i].Key)
+                        {
+                            var propertyId = 0;
+                            var propertyValue = objectsNamesAndIds[i].Value[0];
+                            var property = new KeyValuePair<int, string>(propertyId, propertyValue);
+                            propertyNameAndId.Add(property);
+                            break;
+                        }
+                    }
+                    var propertiesSortedByObjectId = propertyNameAndId.Concat(propertiesSortedByObjectIds[j].Value).ToList();
+                    var objectId = propertiesSortedByObjectIds[j].Key;
+
+                    propertiesNamesAndIds.Add(new KeyValuePair<int, List<KeyValuePair<int, string>>>(objectId, propertiesSortedByObjectId));
+                }
+            }
+            return propertiesNamesAndIds;
+        }
         static List<KeyValuePair<int, string>> RemoveDuplicatedProperties(List<KeyValuePair<int, string>> properties, List<KeyValuePair<int, string>> propertiesIds)
         {
             foreach (var propertyId in propertiesIds)
@@ -394,6 +449,9 @@ namespace FileConverter.Services
                 var propertyNameAndItsId = new KeyValuePair<int, string>(propertiesNames[i].Key, propertyName);
                 propertiesNamesAndTheirIds.Add(propertyNameAndItsId);
             }
+            var propertyNameAndItsIdOne = new KeyValuePair<int, string>(0, "Namn");
+            propertiesNamesAndTheirIds.Add(propertyNameAndItsIdOne);
+
             var orderedPropertiesById = OrderPropertiesById(propertiesNamesAndTheirIds);
             var header = new KeyValuePair<int, List<KeyValuePair<int, string>>>(0, orderedPropertiesById);
             propertiesSortedByObjectIds.Insert(0, header);
