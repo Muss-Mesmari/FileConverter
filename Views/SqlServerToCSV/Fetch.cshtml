@@ -4,44 +4,15 @@
     ViewData["Title"] = "SQL Server to CSV";
 }
 
-<h1 class="text-center"><strong>SQL Server to CSV</strong></h1>
 
-<div class="card" id="SQLServerToCSVSubCard">
-    <div class="card-body">
-        <form method="post" asp-controller="SqlServerToCSV" asp-action="Fetch">
-            <div class="form-group">
-                <label asp-for="SQLServerConfig.Server"></label>
-                <input type="text" class="form-control" placeholder="e.g. dwpro3" asp-for="SQLServerConfig.Server" value="int5_dev">
-            </div>
-            <div class="form-group">
-                <label asp-for="SQLServerConfig.Database"></label>
-                <input type="text" class="form-control" placeholder="e.g. UDGAHBAS" asp-for="SQLServerConfig.Database" value="UDGAHBAS">
-            </div>
-            <div class="form-group">
-                <label asp-for="SQLServerConfig.UserId"></label>
-                <input type="text" class="form-control" placeholder="e.g. ALECTA\\K88677" asp-for="SQLServerConfig.UserId" value="ALECTA\\K88677">
-            </div>
-            <div class="form-group">
-                <label asp-for="SQLServerConfig.Password"></label>
-                <input type="password" class="form-control" placeholder="******" asp-for="SQLServerConfig.Password">
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Connect" class="btn btn-success text-white" />
-            </div>
+<h1 class="text-center mb-3"><strong>SQL Server to CSV</strong></h1>
 
-        </form>
-    </div>
-</div>
-
-
-<hr class="my-3 bg-white" />
-<h4><strong>Preview:</strong></h4>
 
 @if (@Model.SQLServer.NumberOfTables != 0)
 {
 
     <div class="card bg-white text-dark mb-3">
-        <div class="card-header">
+        <div class="card-header" >
             <div class="d-flex flex-row">
                 <div class="font-weight-bold pr-2">Database name: </div>
                 <div class="card-text">@Model.SQLServerConfig.Database.</div>
@@ -62,7 +33,7 @@
                 </li>
             </ul>
         </div>
-        <div class="card-body">
+        <div class="card-body" >
             <div>
                 <form method="post" asp-controller="SqlServerToCSV" asp-action="Download" asp-route-conString="@Model.SQLServerConfig.ConString">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -71,84 +42,84 @@
                         var values = Model.ObjectsTypesNames.Select(x => x.Value.ToString()).ToList();
                     }
 
-                <div class="col">
-                    <div class="card bg-transparent border-0">
-                        <div class="card-deck">
-                            <div class="card bg-transparent border-0">
+                    <div class="col">
+                        <div class="card bg-transparent border-0">
+                            <div class="card-deck">
+                                <div class="card bg-transparent border-0">
 
-                                <div class="h4"> Main object</div>
+                                    <div class="h4"> Main object</div>
 
-                                <div class="form-group" id="downloading-type-option-One" style="display:block">
-                                    <label asp-for="ObjectIdOne" class="control-label"></label>
-                                    <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
-                                        <option value="">Select a type</option>
-                                        <option value="Download all">Download all</option>
-                                    </select>
-                                    <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
+                                    <div class="form-group" id="downloading-type-option-One" style="display:block">
+                                        <label asp-for="ObjectIdOne" class="control-label"></label>
+                                        <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
+                                            <option value="">Select a type</option>
+                                            <option value="Download all">Download all</option>
+                                        </select>
+                                        <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
+                                    </div>
+
+                                    <div class="form-group" id="downloading-type-option-Three" style="display:block">
+                                        <label asp-for="ModelNameOne" class="control-label"></label>
+                                        <select asp-for="ModelNameOne" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
+                                            <option value="">Select a type</option>
+                                            <option value="">Download all</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group" id="downloading-type-option-Four" style="display:block">
+                                        <label asp-for="InputOutputMessage" class="control-label"></label>
+                                        <select asp-for="InputOutputMessage" class="form-control">
+                                            <option value="">Select a type</option>
+                                            <option value="">Download all</option>
+                                            <option value="I">Input message</option>
+                                            <option value="O">Output message</option>
+                                        </select>
+                                    </div>
+
                                 </div>
+                                <div class="card bg-transparent border-0">
 
-                                <div class="form-group" id="downloading-type-option-Three" style="display:block">
-                                    <label asp-for="ModelNameOne" class="control-label"></label>
-                                    <select asp-for="ModelNameOne" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
-                                        <option value="">Select a type</option>
-                                        <option value="">Download all</option>
-                                    </select>
+                                    <div class="h4"> Related object</div>
+
+                                    <div class="form-group" id="downloading-type-option-Two" style="display:block">
+                                        <label asp-for="ObjectIdTwo" class="control-label"></label>
+                                        <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
+                                            <option value="">Select a type</option>
+                                            <option value="Download all">Download all</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group" id="downloading-type-option-Five" style="display:block">
+                                        <label asp-for="ModelNameTwo" class="control-label"></label>
+                                        <select asp-for="ModelNameTwo" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
+                                            <option value="">Select a type</option>
+                                            <option value="">Download all</option>
+                                        </select>
+                                    </div>
                                 </div>
-
-                                <div class="form-group" id="downloading-type-option-Four" style="display:block">
-                                    <label asp-for="InputOutputMessage" class="control-label"></label>
-                                    <select asp-for="InputOutputMessage" class="form-control">
-                                        <option value="">Select a type</option>
-                                        <option value="">Download all</option>
-                                        <option value="I">Input message</option>
-                                        <option value="O">Output message</option>
-                                    </select>
-                                </div>
-
                             </div>
-                            <div class="card bg-transparent border-0">
+                        </div>
 
-                                <div class="h4"> Related object</div>
+                        <div class="form-group" id="downloading-table-option" style="display:none">
+                            <label asp-for="TableName" class="control-label labels"></label>
+                            <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.SQLServer.Tables))">
+                                <option value="">Select a table</option>
+                                <option value="Download all tables">Download all</option>
+                            </select>
+                            <span asp-validation-for="TableName" class="text-danger"></span>
+                        </div>
 
-                                <div class="form-group" id="downloading-type-option-Two" style="display:block">
-                                    <label asp-for="ObjectIdTwo" class="control-label"></label>
-                                    <select asp-for="ObjectIdTwo" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
-                                        <option value="">Select a type</option>
-                                        <option value="Download all">Download all</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group" id="downloading-type-option-Five" style="display:block">
-                                    <label asp-for="ModelNameTwo" class="control-label"></label>
-                                    <select asp-for="ModelNameTwo" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
-                                        <option value="">Select a type</option>
-                                        <option value="">Download all</option>
-                                    </select>
+                        <div class="card bg-transparent border-0">
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label asp-for="ZipDownloadingFormat">
+                                        <input asp-for="ZipDownloadingFormat" />
+                                        @Html.DisplayNameFor(d => d.ZipDownloadingFormat)
+                                    </label>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="form-group" id="downloading-table-option" style="display:none">
-                        <label asp-for="TableName" class="control-label labels"></label>
-                        <select asp-for="TableName" class="form-control" asp-items="@(new SelectList(Model.SQLServer.Tables))">
-                            <option value="">Select a table</option>
-                            <option value="Download all tables">Download all</option>
-                        </select>
-                        <span asp-validation-for="TableName" class="text-danger"></span>
-                    </div>
-
-                    <div class="card bg-transparent border-0">
-                        <div class="form-group">
-                            <div class="checkbox">
-                                <label asp-for="ZipDownloadingFormat">
-                                    <input asp-for="ZipDownloadingFormat" />
-                                    @Html.DisplayNameFor(d => d.ZipDownloadingFormat)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                     <div class="form-group">
                         <input type="submit" value="Download" class="btn btn-success text-white" />
@@ -159,38 +130,80 @@
         </div>
     </div>
 
+    <hr class="my-3 bg-white" />
+    <h4 class="mb-3"><strong>Preview:</strong></h4>
 
-
-
-    <div class="accordion" id="accordionExample">
-        <div class="card">
-            @for (int i = 0; i < @Model.SQLServer.NumberOfColumns; i++)
-            {
-                <div class="card-header" id="heading-@i">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse" data-target="#collapse-@i" aria-expanded="true" aria-controls="collapse-@i">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    @Model.AttributesByTable[i].Key
-                                    <span class="badge badge-warning ml-3">@Model.AttributesByTable[i].Value.Count() Columns</span>
-                                </div>
-                                <div><i class="fas fa-chevron-down text-dark"></i></div>
-                            </div>
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapse-@i" class="collapse" aria-labelledby="heading-@i" data-parent="#accordionExample">
-                    <div class="card-body">
+    <div class="row">
+        @for (int i = 0; i < @Model.SQLServer.NumberOfColumns; i++)
+        {
+            <div class="col-4">
+                <div class="card w-100 mb-2">
+                    <div class="accordion" id="accordionExample">
                         <ul class="list-group list-group-flush">
-                            @for (int j = 0; j < @Model.AttributesByTable[i].Value.Count(); j++)
-                            {
-                                <li class="list-group-item list-group-item-action text-dark">@Model.AttributesByTable[i].Value[j]</li>
-                            }
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="h6 text-dark m-0">
+                                        Table
+                                    </div>
+                                    <span class="badge badge-warning m-0">@Model.AttributesByTable[i].Value.Count() Columns</span>
+                                </div>
+                            </li>
+                            <li class="list-group-item" id="heading-@i">
+                                <button class="btn btn-link btn-block text-left p-0" type="button" data-toggle="collapse" data-target="#collapse-@i" aria-expanded="true" aria-controls="collapse-@i">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="h6">
+                                            @Model.AttributesByTable[i].Key
+                                        </div>
+                                        <div><i class="fas fa-chevron-down text-dark"></i></div>
+                                    </div>
+                                </button>
+                            </li>
                         </ul>
+                        <div id="collapse-@i" class="collapse" aria-labelledby="heading-@i" data-parent="#accordionExample">
+                            <div>
+                                <ul class="list-group list-group-flush">
+                                    @for (int j = 0; j < @Model.AttributesByTable[i].Value.Count(); j++)
+                                    {
+                                        <li class="list-group-item list-group-item-action text-dark">@Model.AttributesByTable[i].Value[j]</li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            }
+            </div>
+        }
+    </div>
+
+}
+else
+{
+    <div class="card" id="SQLServerToCSVSubCard">
+        <div class="card-body">
+            <form method="post" asp-controller="SqlServerToCSV" asp-action="Fetch">
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.Server"></label>
+                    <input type="text" class="form-control" placeholder="e.g. dwpro3" asp-for="SQLServerConfig.Server" value="int5_dev">
+                </div>
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.Database"></label>
+                    <input type="text" class="form-control" placeholder="e.g. UDGAHBAS" asp-for="SQLServerConfig.Database" value="UDGAHBAS">
+                </div>
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.UserId"></label>
+                    <input type="text" class="form-control" placeholder="e.g. ALECTA\\K88677" asp-for="SQLServerConfig.UserId" value="ALECTA\\K88677">
+                </div>
+                <div class="form-group">
+                    <label asp-for="SQLServerConfig.Password"></label>
+                    <input type="password" class="form-control" placeholder="******" asp-for="SQLServerConfig.Password">
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Connect" class="btn btn-success text-white" />
+                </div>
+
+            </form>
         </div>
     </div>
+
 }
 
