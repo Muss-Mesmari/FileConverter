@@ -535,7 +535,7 @@ namespace FileConverter.Services
         {
             if (value.GetType() == typeof(string))
             {
-                if (value.Length >= 200) // temprory to skip downloading long texts
+                if (Regex.IsMatch(value, "<[^>]*(>|$)")) // temprory to skip downloading long texts
                 {
                     var validValue = string.Empty;
                     value = validValue;

@@ -108,22 +108,27 @@ namespace FileConverter.Services
             if (cSVDownloadingOption == CSVDownloadingOptions.Tables)
             {
                 var fileName = tableName;
-                return fileName;
-            }
-            else if (cSVDownloadingOption == CSVDownloadingOptions.Objects || cSVDownloadingOption == CSVDownloadingOptions.Relationships)
-            {
-                var fileName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString);
-                return fileName;
+                return fileName.Trim();
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.DownloadAllTables)
             {
-                var fileName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
-                return fileName;
+                var fileName = "Tables";
+                return fileName.Trim();
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.Objects)
+            {
+                var fileName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString);
+                return fileName.Trim();
+            }
+            else if (cSVDownloadingOption == CSVDownloadingOptions.Relationships || cSVDownloadingOption == CSVDownloadingOptions.RelationshipsToAttributesOrAttributesGroupsInputMessage || cSVDownloadingOption == CSVDownloadingOptions.RelationshipsToAttributesOrAttributesGroupsOutputMessage)
+            {
+                var fileName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString) + await _databaseServices.GetObjectTypeNameByClassIdAsync(ObjectIdTwo, conString);
+                return fileName.Trim();
             }
             else
             {
                 var fileName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
-                return fileName;
+                return fileName.Trim();
             }            
         }
     }
