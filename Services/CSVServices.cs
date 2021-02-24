@@ -471,7 +471,7 @@ namespace FileConverter.Services
                 var row = string.Empty;
                 for (int i = 0; i < propertiesSortedByObjectId.Value.Count; i++)
                 {
-                    if (i != propertiesSortedByObjectId.Value.Count)
+                    if ((i + 1) != propertiesSortedByObjectId.Value.Count)
                     {
                         var value = CreateValidCSVValue(propertiesSortedByObjectId.Value[i].Value);
                         row += value + ",";
