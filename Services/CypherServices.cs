@@ -17,16 +17,13 @@ namespace FileConverter.Services
     public class CypherServices : ICypherServices
     {
         private readonly ICSVServices _cSVServices;
-        private readonly IDatabaseServices _databaseServices;
         private readonly IFileServices _fileServices;
         public CypherServices(
             ICSVServices cSVServices,
-            IDatabaseServices databaseServices,
               IFileServices fileServices
             )
         {
             _cSVServices = cSVServices;
-            _databaseServices = databaseServices;
             _fileServices = fileServices;
         }
 
@@ -44,7 +41,7 @@ namespace FileConverter.Services
                          $" SET {variableName} = row, ";
 
             var cypherPartTwo = string.Empty;
-            for (int i = 1; i < attributesNames.Count; i++)
+            for (int i = 0; i < attributesNames.Count; i++)
             {
                 var attributeName = attributesNames[i];
                 if (attributeName.Contains("Id"))
@@ -78,15 +75,6 @@ namespace FileConverter.Services
         }
         private async Task<string> CreateRelationshipsAsync(string tableName, string conString, int objectIdOne, int objectIdTwo, string modelNameOne, string modelNameTwo, string inputOrOutput)
         {
-
-            // :auto USING PERIODIC COMMIT 500  
-            // LOAD CSV WITH HEADERS FROM 'file:////TjänstAndTjänst.csv' AS row 
-            // WITH toInteger(row.ObjectId) AS ObjectId, toInteger(row.RelatedObjectId) AS RelatedObjectId  
-            // MATCH(t: Tjänst { ObjectId: ObjectId})  
-            // MATCH(t: Tjänst { RelatedObjectId: RelatedObjectId}) 
-            // MERGE(t) -[rel: INGAR_I]->(a)  
-            // RETURN count(rel); 
-
             var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, objectIdTwo, modelNameOne);
             var relationshipsRows = await _cSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, objectIdTwo, modelNameOne, modelNameTwo, modelNameTwo);
             var attributesNames = relationshipsRows.RowsFromSqlServer[0].Split(",").ToList();

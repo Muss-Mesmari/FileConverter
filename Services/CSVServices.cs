@@ -383,10 +383,15 @@ namespace FileConverter.Services
                     {
                         if (propertiesSortedByObjectIds[j].Key == attributesPropertiesNamesAndIds[i].Key)
                         {
-                            var propertyId = 0;
-                            var propertyValue = attributesPropertiesNamesAndIds[i].Value;
-                            var property = new KeyValuePair<int, string>(propertyId, propertyValue);
-                            propertyNameAndId.Add(property);
+                            var propertyIdOne = 0;
+                            var propertyValueOne = attributesPropertiesNamesAndIds[i].Key.ToString();
+                            var propertyOne = new KeyValuePair<int, string>(propertyIdOne, propertyValueOne);
+                            propertyNameAndId.Add(propertyOne);
+
+                            var propertyIdTwo = 1;
+                            var propertyValueTwo = attributesPropertiesNamesAndIds[i].Value;
+                            var propertyTwo = new KeyValuePair<int, string>(propertyIdTwo, propertyValueTwo);
+                            propertyNameAndId.Add(propertyTwo);
                             break;
                         }
                     }
@@ -406,10 +411,16 @@ namespace FileConverter.Services
                     {
                         if (propertiesSortedByObjectIds[j].Key == objectsNamesAndIds[i].Key)
                         {
-                            var propertyId = 0;
-                            var propertyValue = objectsNamesAndIds[i].Value[0];
-                            var property = new KeyValuePair<int, string>(propertyId, propertyValue);
-                            propertyNameAndId.Add(property);
+                            var propertyIdOne = 0;
+                            var propertyValueOne = objectsNamesAndIds[i].Key.ToString();
+                            var propertyOne = new KeyValuePair<int, string>(propertyIdOne, propertyValueOne);
+                            propertyNameAndId.Add(propertyOne);
+
+                            var propertyIdTwo = 1;
+                            var propertyValueTwo = objectsNamesAndIds[i].Value[0];
+                            var propertyTwo = new KeyValuePair<int, string>(propertyIdTwo, propertyValueTwo);
+                            propertyNameAndId.Add(propertyTwo);
+
                             break;
                         }
                     }
@@ -449,8 +460,11 @@ namespace FileConverter.Services
                 var propertyNameAndItsId = new KeyValuePair<int, string>(propertiesNames[i].Key, propertyName);
                 propertiesNamesAndTheirIds.Add(propertyNameAndItsId);
             }
-            var propertyNameAndItsIdOne = new KeyValuePair<int, string>(0, "Namn");
+
+            var propertyNameAndItsIdOne = new KeyValuePair<int, string>(0, "Id");
             propertiesNamesAndTheirIds.Add(propertyNameAndItsIdOne);
+            var propertyNameAndItsIdTwo = new KeyValuePair<int, string>(1, "Namn");
+            propertiesNamesAndTheirIds.Add(propertyNameAndItsIdTwo);
 
             var orderedPropertiesById = OrderPropertiesById(propertiesNamesAndTheirIds);
             var header = new KeyValuePair<int, List<KeyValuePair<int, string>>>(0, orderedPropertiesById);

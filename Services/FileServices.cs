@@ -107,17 +107,15 @@ namespace FileConverter.Services
             byte[] file1 = GetFileContents(files[0]);
             byte[] file2 = GetFileContents(files[1]);
 
-            using (MemoryStream ms = new MemoryStream())
+            using MemoryStream ms = new MemoryStream();
+            using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
             {
-                using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
-                {
-                    var zipArchiveEntry = archive.CreateEntry($"{csvFileName}.csv", CompressionLevel.Optimal);
-                    using (var zipStream = zipArchiveEntry.Open()) zipStream.Write(file1, 0, file1.Length);
-                    zipArchiveEntry = archive.CreateEntry("Cypher.txt", CompressionLevel.Optimal);
-                    using (var zipStream = zipArchiveEntry.Open()) zipStream.Write(file2, 0, file2.Length);
-                }
-                return ms.ToArray();
+                var zipArchiveEntry = archive.CreateEntry($"{csvFileName}.csv", CompressionLevel.Optimal);
+                using (var zipStream = zipArchiveEntry.Open()) zipStream.Write(file1, 0, file1.Length);
+                zipArchiveEntry = archive.CreateEntry("Cypher.txt", CompressionLevel.Optimal);
+                using (var zipStream = zipArchiveEntry.Open()) zipStream.Write(file2, 0, file2.Length);
             }
+            return ms.ToArray();
         }
         public async Task<string> CreateFileNameAsync(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName)
         {
