@@ -14,5 +14,6 @@ namespace FileConverter.Services
         string BuildCsvStringFromSQLServer(CSV csv);
         List<string> BuildMultipleCsvStringsFromSQLServer(CSV csv);
         CSVDownloadingOptions ChooseCSVDownloadingOptions(string tableName, int objectIdOne, int objectIdTwo, string inputOutputMessage);
+        Task<List<string>> CreateCSVObjectsRowsAsync(string conString, int classId, int classIdTwo, string modelName, string inputOrOutput);
     }
 }

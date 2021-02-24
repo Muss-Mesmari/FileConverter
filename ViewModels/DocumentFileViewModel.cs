@@ -36,6 +36,9 @@ namespace FileConverter.ViewModels
 
 		[Display(Name = "Check the box if you want the objects to be downloaded in separate CSV files")]
 		public bool ZipDownloadingFormat { get; set; }
+
+		[Display(Name = "Generate Cypher code")]
+		public bool IsCypher { get; set; }		
 		public List<KeyValuePair<string, List<string>>> AttributesByTable { get; set; }
 		public bool IsType { get; set; }
 		public bool IsTable { get; set; }

@@ -25,14 +25,17 @@ namespace FileConverter.Controllers
         private readonly IDatabaseServices _databaseServices;
         private readonly ICSVServices _CSVServices;
         private readonly IFileServices _fileServices;
+        private readonly ICypherServices _cypherServices;
 
         public SqlServerToCSVController
             (
             IDatabaseServices databaseServices,
+             ICypherServices cypherServices,
             ICSVServices csvServices,
             IFileServices fileServices)
         {
             _databaseServices = databaseServices;
+            _cypherServices = cypherServices;
             _CSVServices = csvServices;
             _fileServices = fileServices;
         }
@@ -84,22 +87,39 @@ namespace FileConverter.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelNameOne, string modelNameTwo, bool zipDownloadingFormat, string inputOutputMessage)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelNameOne, string modelNameTwo, bool zipDownloadingFormat, string inputOutputMessage, bool isCypher)
         {
             var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelNameOne, modelNameTwo, inputOutputMessage);
+            var csvFileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelNameOne);
 
-            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelNameOne);
-            if (!zipDownloadingFormat)
+
+
+            if (!zipDownloadingFormat && !isCypher)
             {
                 var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
                 var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
-                return File(fileContents, "text/csv", $"{fileName.Trim()}.csv");
+                return File(fileContents, "text/csv", $"{csvFileName.Trim()}.csv");
+            }
+            else if (isCypher)
+            {
+                //var fileContents = _fileServices.GetFileContents(cypher);
+                //return File(fileContents, "text/txt", $"{fileName.Trim() +"-Cypher"}.txt");
+                var cypherAndCsvDownloadFormat = new List<string>();
+
+                var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
+                cypherAndCsvDownloadFormat.Add(csvDownloadFormat);           
+
+                var cypher = await _cypherServices.GenerateCypherCodeAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelNameOne, modelNameTwo, inputOutputMessage);
+                cypherAndCsvDownloadFormat.Add(cypher);
+
+                var fileContents = _fileServices.GetZipFileMultipleContentsFormat(cypherAndCsvDownloadFormat, csvFileName);
+                return File(fileContents, "application/zip", $"{csvFileName.Trim()}.zip", true);
             }
             else
             {
                 var multipleCsvDownloadFormat = _CSVServices.BuildMultipleCsvStringsFromSQLServer(csv);
                 var fileContents = _fileServices.GetZipFileContents(multipleCsvDownloadFormat);
-                return File(fileContents, "application/zip", $"{fileName.Trim()}.zip", true);
+                return File(fileContents, "application/zip", $"{csvFileName.Trim()}.zip", true);
             }
         }
 

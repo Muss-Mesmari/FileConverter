@@ -102,6 +102,23 @@ namespace FileConverter.Services
 
             return memoryStream.ToArray();
         }
+        public Byte[] GetZipFileMultipleContentsFormat(List<string> files, string csvFileName)
+        {
+            byte[] file1 = GetFileContents(files[0]);
+            byte[] file2 = GetFileContents(files[1]);
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
+                {
+                    var zipArchiveEntry = archive.CreateEntry($"{csvFileName}.csv", CompressionLevel.Optimal);
+                    using (var zipStream = zipArchiveEntry.Open()) zipStream.Write(file1, 0, file1.Length);
+                    zipArchiveEntry = archive.CreateEntry("Cypher.txt", CompressionLevel.Optimal);
+                    using (var zipStream = zipArchiveEntry.Open()) zipStream.Write(file2, 0, file2.Length);
+                }
+                return ms.ToArray();
+            }
+        }
         public async Task<string> CreateFileNameAsync(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName)
         {
             var cSVDownloadingOption = _CSVServices.ChooseCSVDownloadingOptions(tableName, objectIdOne, ObjectIdTwo, null);
@@ -122,12 +139,14 @@ namespace FileConverter.Services
             }
             else if (cSVDownloadingOption == CSVDownloadingOptions.Relationships || cSVDownloadingOption == CSVDownloadingOptions.RelationshipsToAttributesOrAttributesGroupsInputMessage || cSVDownloadingOption == CSVDownloadingOptions.RelationshipsToAttributesOrAttributesGroupsOutputMessage)
             {
-                var fileName = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString) + await _databaseServices.GetObjectTypeNameByClassIdAsync(ObjectIdTwo, conString);
+                var fileNamePartOne = await _databaseServices.GetObjectTypeNameByClassIdAsync(objectIdOne, conString);
+                var fileNamePartTwo = await _databaseServices.GetObjectTypeNameByClassIdAsync(ObjectIdTwo, conString);
+                var fileName = fileNamePartOne.Trim() + "And" + fileNamePartTwo.Trim();
                 return fileName.Trim();
             }
             else
             {
-                var fileName = DateTime.Now.ToShortDateString() + "- Converted SQLServer file";
+                var fileName = "Converted SQLServer file";
                 return fileName.Trim();
             }            
         }

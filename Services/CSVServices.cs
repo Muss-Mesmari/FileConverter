@@ -304,7 +304,7 @@ namespace FileConverter.Services
             var objectsRows = await CreateCSVObjectsRowsAsync(conString, objectIdOne, classIdTwo, modelName, null);
             return objectsRows;
         }
-        private async Task<List<string>> CreateCSVObjectsRowsAsync(string conString, int classId, int classIdTwo, string modelName, string inputOrOutput)
+        public async Task<List<string>> CreateCSVObjectsRowsAsync(string conString, int classId, int classIdTwo, string modelName, string inputOrOutput)
         {
             // retrieve necessary data from database
             var propertiesIds = await _databaseServices.GetPropertiesIdsByClassIdAsync(conString, classId);

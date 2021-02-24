@@ -34,6 +34,7 @@ namespace FileConverter
 			services.AddScoped<IXlsxServices, XlsxServices>();
 			services.AddScoped<ICSVServices, CSVServices>();
 			services.AddScoped<IFileServices, FileServices>();
+			services.AddScoped<ICypherServices, CypherServices>();
 			services.AddControllersWithViews();
 		}
 

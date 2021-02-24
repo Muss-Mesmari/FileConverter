@@ -268,8 +268,7 @@ namespace FileConverter.Services
         public async Task<List<KeyValuePair<int, List<string>>>> GetObjectsNamesAndObjectIdsByClassIdAsync(string conString, int classId, string modelName)  // Retrieve objects names and ids
         {
             var sql = $@"  SELECT [objectId] ,[name], [description] FROM [UDGAHBAS].[dbo].[Object] WHERE [classId] = {classId} AND [name] like '{modelName}%' ORDER BY [name]";
-            var objectsNamesAndIds = new List<KeyValuePair<int, string>>();
-
+      
             var resultSet = await ExcuteSQLAsync(conString, sql);
             return resultSet;
         }
