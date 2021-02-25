@@ -38,7 +38,14 @@ namespace FileConverter.ViewModels
 		public bool ZipDownloadingFormat { get; set; }
 
 		[Display(Name = "Generate Cypher code")]
-		public bool IsCypher { get; set; }		
+		public bool IsCypher { get; set; }
+
+		[Display(Name = "Convert to Json")]
+		public bool IsJson { get; set; }
+
+		[Display(Name = "Convert to CSV")]
+		public bool IsCSV { get; set; }
+		
 		public List<KeyValuePair<string, List<string>>> AttributesByTable { get; set; }
 		public bool IsType { get; set; }
 		public bool IsTable { get; set; }

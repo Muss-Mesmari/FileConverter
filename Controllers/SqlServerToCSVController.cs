@@ -26,18 +26,22 @@ namespace FileConverter.Controllers
         private readonly ICSVServices _CSVServices;
         private readonly IFileServices _fileServices;
         private readonly ICypherServices _cypherServices;
+        private readonly IJsonServices _jsonServices;
 
         public SqlServerToCSVController
             (
             IDatabaseServices databaseServices,
              ICypherServices cypherServices,
             ICSVServices csvServices,
-            IFileServices fileServices)
+            IFileServices fileServices,
+            IJsonServices jsonServices
+            )
         {
             _databaseServices = databaseServices;
             _cypherServices = cypherServices;
             _CSVServices = csvServices;
             _fileServices = fileServices;
+            _jsonServices = jsonServices;
         }
         [HttpGet]
         public IActionResult Fetch()
@@ -87,14 +91,21 @@ namespace FileConverter.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelNameOne, string modelNameTwo, bool zipDownloadingFormat, string inputOutputMessage, bool isCypher)
+        public async Task<IActionResult> Download(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelNameOne, string modelNameTwo, bool zipDownloadingFormat, string inputOutputMessage, bool isCypher, bool isJson, bool isCSV)
         {
+            var json = await _jsonServices.ConvertSQLServerToJSONAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelNameOne, modelNameTwo, inputOutputMessage);
+
             var csv = await _CSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, ObjectIdTwo, modelNameOne, modelNameTwo, inputOutputMessage);
-            var csvFileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelNameOne);
+            var csvFileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelNameOne, isJson);
 
 
-
-            if (!zipDownloadingFormat && !isCypher)
+            if (isJson)
+            {
+                var multipleCsvDownloadFormat = json;
+                var fileContents = _fileServices.GetZipFileMultipleContentsFormat(multipleCsvDownloadFormat, csvFileName);
+                return File(fileContents, "application/zip", $"{csvFileName.Trim()}.zip", true);
+            }
+            else if (!zipDownloadingFormat && !isCypher)
             {
                 var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
                 var fileContents = _fileServices.GetFileContents(csvDownloadFormat);
@@ -102,8 +113,6 @@ namespace FileConverter.Controllers
             }
             else if (isCypher)
             {
-                //var fileContents = _fileServices.GetFileContents(cypher);
-                //return File(fileContents, "text/txt", $"{fileName.Trim() +"-Cypher"}.txt");
                 var cypherAndCsvDownloadFormat = new List<string>();
 
                 var csvDownloadFormat = _CSVServices.BuildCsvStringFromSQLServer(csv);
@@ -112,7 +121,7 @@ namespace FileConverter.Controllers
                 var cypher = await _cypherServices.GenerateCypherCodeAsync(tableName, conString, objectIdOne, ObjectIdTwo, modelNameOne, modelNameTwo, inputOutputMessage);
                 cypherAndCsvDownloadFormat.Add(cypher);
 
-                var fileContents = _fileServices.GetZipFileMultipleContentsFormat(cypherAndCsvDownloadFormat, csvFileName);
+                var fileContents = _fileServices.GetZipFileMultipleContentsFormatCypherIncluded(cypherAndCsvDownloadFormat, csvFileName);
                 return File(fileContents, "application/zip", $"{csvFileName.Trim()}.zip", true);
             }
             else

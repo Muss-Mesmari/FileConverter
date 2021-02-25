@@ -110,6 +110,25 @@
                     </div>
 
                     <div class="card bg-transparent border-0">
+
+                        <div class="form-group mb-0" id="downloading-type-option-Eight">
+                            <div class="checkbox">
+                                <label asp-for="IsJson">
+                                    <input asp-for="IsJson" />
+                                    @Html.DisplayNameFor(j => j.IsJson)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-0" id="downloading-type-option-Nine">
+                            <div class="checkbox">
+                                <label asp-for="IsCSV">
+                                    <input asp-for="IsCSV" />
+                                    @Html.DisplayNameFor(c => c.IsCSV)
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="form-group mb-0" id="downloading-type-option-Seven">
                             <div class="checkbox">
                                 <label asp-for="IsCypher">

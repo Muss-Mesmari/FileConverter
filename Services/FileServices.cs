@@ -12,6 +12,7 @@ using System.Text;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
+using System.Json;
 
 namespace FileConverter.Services
 {
@@ -102,7 +103,7 @@ namespace FileConverter.Services
 
             return memoryStream.ToArray();
         }
-        public Byte[] GetZipFileMultipleContentsFormat(List<string> files, string csvFileName)
+        public Byte[] GetZipFileMultipleContentsFormatCypherIncluded(List<string> files, string csvFileName)
         {
             byte[] file1 = GetFileContents(files[0]);
             byte[] file2 = GetFileContents(files[1]);
@@ -117,7 +118,25 @@ namespace FileConverter.Services
             }
             return ms.ToArray();
         }
-        public async Task<string> CreateFileNameAsync(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName)
+
+        public Byte[] GetZipFileMultipleContentsFormat(List<string> files, string csvFileName)
+        {
+            using MemoryStream ms = new MemoryStream();
+            using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true))
+            {
+                for (int i = 0; i < files.Count; i++)
+                {
+                    byte[] file1 = GetFileContents(files[i]);
+                    var fileName = files[i];
+                    var data = JsonObject.Parse(fileName);
+                    string name = data["Namn"].ToString().Replace("\"", "");
+                    var zipArchiveEntry = archive.CreateEntry($"{name}.json", CompressionLevel.Optimal);
+                    using (var zipStream = zipArchiveEntry.Open()) zipStream.Write(file1, 0, file1.Length);
+                }
+            }
+            return ms.ToArray();
+        }
+        public async Task<string> CreateFileNameAsync(string tableName, string conString, int objectIdOne, int ObjectIdTwo, string modelName, bool isJson)
         {
             var cSVDownloadingOption = _CSVServices.ChooseCSVDownloadingOptions(tableName, objectIdOne, ObjectIdTwo, null);
             if (cSVDownloadingOption == CSVDownloadingOptions.Tables)

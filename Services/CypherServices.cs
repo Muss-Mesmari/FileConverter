@@ -31,7 +31,7 @@ namespace FileConverter.Services
         private async Task<string> CreateNodesAsync(string tableName, string conString, int objectIdOne, int objectIdTwo, string modelName, string inputOrOutput)
         {
 
-            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, objectIdTwo, modelName);
+            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, objectIdTwo, modelName, false);
             var attributesLists = await _cSVServices.CreateCSVObjectsRowsAsync(conString, objectIdOne, objectIdTwo, modelName, inputOrOutput);
             var variableName = CreateVariableNameForNodes(fileName);
             var attributesNames = attributesLists[0].Split(",").ToList();
@@ -75,7 +75,7 @@ namespace FileConverter.Services
         }
         private async Task<string> CreateRelationshipsAsync(string tableName, string conString, int objectIdOne, int objectIdTwo, string modelNameOne, string modelNameTwo, string inputOrOutput)
         {
-            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, objectIdTwo, modelNameOne);
+            var fileName = await _fileServices.CreateFileNameAsync(tableName, conString, objectIdOne, objectIdTwo, modelNameOne, false);
             var relationshipsRows = await _cSVServices.ConvertSQLServerToCSVAsync(conString, tableName, objectIdOne, objectIdTwo, modelNameOne, modelNameTwo, modelNameTwo);
             var attributesNames = relationshipsRows.RowsFromSqlServer[0].Split(",").ToList();
            
