@@ -54,6 +54,7 @@
                                     <select asp-for="ObjectIdOne" class="form-control" asp-items="@(new SelectList(Model.ObjectsTypesNames,"Key", "Value"))">
                                         <option value="">Select a type</option>
                                         <option value="Download all">Download all</option>
+                                        <option value="812">Utskrift</option>
                                     </select>
                                     <span asp-validation-for="ObjectIdOne" class="text-danger"></span>
                                 </div>
@@ -63,6 +64,7 @@
                                     <select asp-for="ModelNameOne" class="form-control" asp-items="@(new SelectList(Model.ModelsNames,keys))">
                                         <option value="">Select a type</option>
                                         <option value="">Download all</option>
+                                        <option value="812">Utskrift</option>
                                     </select>
                                 </div>
 

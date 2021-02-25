@@ -139,6 +139,7 @@ namespace FileConverter.Services
 
             var tables = await GetAllTablesAsync(conString);
             var objectsTypesName = await GetAllObjectsTypesNamesAsync(tables, conString);
+            objectsTypesName.Add(new KeyValuePair<int, string>(812, "Utskrift"));
 
             foreach (var o in objectsTypesName)
             {
